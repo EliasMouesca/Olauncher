@@ -874,6 +874,30 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         )
     }
 
+    private fun openDoubleTapApp() {
+        if (!prefs.doubleTapAppEnabled) return
+        launchAppOrShortcut(
+            appName = prefs.appNameDoubleTap,
+            packageName = prefs.appPackageDoubleTap,
+            activityClassName = prefs.appActivityClassNameDoubleTap,
+            shortcutId = prefs.shortcutIdDoubleTap,
+            isShortcut = prefs.isShortcutDoubleTap,
+            userString = prefs.appUserDoubleTap,
+        )
+    }
+
+    private fun doubleTapAction() {
+        if (prefs.doubleTapAppEnabled) {
+            openDoubleTapApp()
+            return
+        }
+        if (!prefs.lockModeOn) return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
+            binding.lock.performClick()
+        else
+            lockPhone()
+    }
+
     private fun showAppList(flag: Int, rename: Boolean = false, includeHiddenApps: Boolean = false) {
         viewModel.getAppList(includeHiddenApps)
         try {
@@ -1015,11 +1039,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
             override fun onDoubleClick() {
                 super.onDoubleClick()
-                if (!prefs.lockModeOn) return
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-                    binding.lock.performClick()
-                else
-                    lockPhone()
+                doubleTapAction()
             }
 
             override fun onClick() {
@@ -1049,6 +1069,11 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             override fun onSwipeDown() {
                 super.onSwipeDown()
                 swipeDownAction()
+            }
+
+            override fun onDoubleClick() {
+                super.onDoubleClick()
+                doubleTapAction()
             }
 
             override fun onLongClick(view: View) {

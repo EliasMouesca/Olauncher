@@ -45,6 +45,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val refreshHome = MutableLiveData<Boolean>()
     val toggleDateTime = MutableLiveData<Unit>()
     val updateSwipeApps = MutableLiveData<Any>()
+    val updateDoubleTapApp = MutableLiveData<Any>()
     val appList = MutableLiveData<List<AppModel>?>()
     val hiddenApps = MutableLiveData<List<AppModel>?>()
     val isOlauncherDefault = MutableLiveData<Boolean>()
@@ -95,6 +96,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
             Constants.FLAG_SET_SWIPE_LEFT_APP -> saveSwipeApp(appModel, isLeft = true)
             Constants.FLAG_SET_SWIPE_RIGHT_APP -> saveSwipeApp(appModel, isLeft = false)
+            Constants.FLAG_SET_DOUBLE_TAP_APP -> saveDoubleTapApp(appModel)
             Constants.FLAG_SET_CLOCK_APP -> saveClockApp(appModel)
             Constants.FLAG_SET_CALENDAR_APP -> saveCalendarApp(appModel)
             Constants.FLAG_SET_SCREEN_TIME_APP -> saveScreenTimeApp(appModel)
@@ -318,6 +320,32 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
         updateSwipeApps()
+    }
+
+    private fun saveDoubleTapApp(appModel: AppModel) {
+        when (appModel) {
+            is AppModel.PrivateSpaceHeader -> return
+            is AppModel.App -> {
+                prefs.appNameDoubleTap = appModel.appLabel
+                prefs.appPackageDoubleTap = appModel.appPackage
+                prefs.appUserDoubleTap = appModel.user.toString()
+                prefs.appActivityClassNameDoubleTap = appModel.activityClassName
+                prefs.isShortcutDoubleTap = false
+                prefs.shortcutIdDoubleTap = ""
+            }
+
+            is AppModel.PinnedShortcut -> {
+                prefs.appNameDoubleTap = appModel.appLabel
+                prefs.appPackageDoubleTap = appModel.appPackage
+                prefs.appUserDoubleTap = appModel.user.toString()
+                prefs.appActivityClassNameDoubleTap = null
+                prefs.isShortcutDoubleTap = true
+                prefs.shortcutIdDoubleTap = appModel.shortcutId
+            }
+        }
+        prefs.doubleTapAppEnabled = true
+        prefs.lockModeOn = false
+        updateDoubleTapApp.postValue(Unit)
     }
 
     private fun saveClockApp(appModel: AppModel) {

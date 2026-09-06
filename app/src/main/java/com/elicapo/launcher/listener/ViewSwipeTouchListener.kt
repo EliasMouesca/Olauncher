@@ -87,7 +87,7 @@ internal open class ViewSwipeTouchListener(c: Context?, v: View) : OnTouchListen
     open fun onSwipeUp() {}
     open fun onSwipeDown() {}
     open fun onLongClick(view: View) {}
-    private fun onDoubleClick() {}
+    open fun onDoubleClick() {}
     open fun onClick(view: View) {}
 
     init {

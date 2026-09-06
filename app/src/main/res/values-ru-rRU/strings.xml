@@ -31,6 +31,7 @@
     <string name="home_layout_alignment">Расположение приложений</string>
     <string name="swipe_left_app">Свайп влево</string>
     <string name="swipe_right_app">Свайп вправо</string>
+    <string name="double_tap_app">Приложение для двойного нажатия</string>
     <string name="_0">0</string>
     <string name="_1">1</string>
     <string name="_2">2</string>

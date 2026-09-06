@@ -30,6 +30,7 @@
     <string name="home_layout_alignment">앱 정렬</string>
     <string name="swipe_left_app">왼쪽으로 넘길 앱</string>
     <string name="swipe_right_app">오른쪽으로 넘길 앱</string>
+    <string name="double_tap_app">두 번 눌러 실행할 앱</string>
     <string name="_0">0</string>
     <string name="_1">1</string>
     <string name="_2">2</string>

@@ -77,6 +77,7 @@
     <string name="home_layout_alignment">محاذاة التطبيق</string>
     <string name="swipe_left_app">افتح عند التمرير لليسار</string>
     <string name="swipe_right_app">افتح عند التمرير لليمين</string>
+    <string name="double_tap_app">تطبيق النقر المزدوج</string>
     <string name="auto_show_keyboard">العرض التلقائي للوحة المفاتيح</string>
     <string name="hide">يخفي</string>
     <string name="status_bar">أظهر شريط الحالة</string>

@@ -76,6 +76,7 @@
     <string name="home_layout_alignment">App-Ausrichtung</string>
     <string name="swipe_left_app">Wischen Sie nach links über die App</string>
     <string name="swipe_right_app">Wischen Sie nach rechts über die App</string>
+    <string name="double_tap_app">App für Doppeltippen</string>
     <string name="auto_show_keyboard">Tastatur automatisch anzeigen</string>
     <string name="hide">Verstecken</string>
     <string name="status_bar">Zeige Statusleiste</string>

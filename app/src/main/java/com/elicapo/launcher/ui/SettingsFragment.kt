@@ -84,6 +84,7 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
         populateStatusBar()
         populateDateTime()
         populateSwipeApps()
+        populateDoubleTapApp()
         populateSwipeDownAction()
         populateActionHints()
         initClickListeners()
@@ -157,6 +158,7 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
 
             R.id.swipeLeftApp -> showAppListIfEnabled(Constants.FLAG_SET_SWIPE_LEFT_APP)
             R.id.swipeRightApp -> showAppListIfEnabled(Constants.FLAG_SET_SWIPE_RIGHT_APP)
+            R.id.doubleTapApp -> showDoubleTapAppList()
             R.id.swipeDownAction -> binding.swipeDownSelectLayout.visibility = View.VISIBLE
             R.id.notifications -> updateSwipeDownAction(Constants.SwipeDownAction.NOTIFICATIONS)
             R.id.search -> updateSwipeDownAction(Constants.SwipeDownAction.SEARCH)
@@ -199,6 +201,7 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
 
             R.id.swipeLeftApp -> toggleSwipeLeft()
             R.id.swipeRightApp -> toggleSwipeRight()
+            R.id.doubleTapApp -> toggleDoubleTapApp()
             R.id.toggleLock -> startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }
         return true
@@ -231,6 +234,7 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
         binding.dateOnly.setOnClickListener(this)
         binding.swipeLeftApp.setOnClickListener(this)
         binding.swipeRightApp.setOnClickListener(this)
+        binding.doubleTapApp.setOnClickListener(this)
         binding.swipeDownAction.setOnClickListener(this)
         binding.search.setOnClickListener(this)
         binding.notifications.setOnClickListener(this)
@@ -269,6 +273,7 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
         binding.appThemeText.setOnLongClickListener(this)
         binding.swipeLeftApp.setOnLongClickListener(this)
         binding.swipeRightApp.setOnLongClickListener(this)
+        binding.doubleTapApp.setOnLongClickListener(this)
         binding.toggleLock.setOnLongClickListener(this)
     }
 
@@ -288,6 +293,10 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
         }
         viewModel.updateSwipeApps.observe(viewLifecycleOwner) {
             populateSwipeApps()
+        }
+        viewModel.updateDoubleTapApp.observe(viewLifecycleOwner) {
+            populateDoubleTapApp()
+            populateLockSettings()
         }
     }
 
@@ -380,7 +389,7 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
     private fun checkAdminPermission() {
         val isAdmin: Boolean = deviceManager.isAdminActive(componentName)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
-            prefs.lockModeOn = isAdmin
+            prefs.lockModeOn = isAdmin && !prefs.doubleTapAppEnabled
     }
 
     private fun toggleAccessibilityVisibility(show: Boolean) {
@@ -402,16 +411,28 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
 
     private fun toggleLockMode() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            if (!prefs.lockModeOn && !isAccessServiceEnabled(requireContext())) {
-                toggleAccessibilityVisibility(true)
-                return
+            if (prefs.doubleTapAppEnabled) {
+                if (!isAccessServiceEnabled(requireContext())) {
+                    toggleAccessibilityVisibility(true)
+                    return
+                }
+                prefs.doubleTapAppEnabled = false
+                prefs.lockModeOn = true
+            } else {
+                if (!prefs.lockModeOn && !isAccessServiceEnabled(requireContext())) {
+                    toggleAccessibilityVisibility(true)
+                    return
+                }
+                prefs.lockModeOn = !prefs.lockModeOn
             }
-            prefs.lockModeOn = !prefs.lockModeOn
         } else {
             val isAdmin: Boolean = deviceManager.isAdminActive(componentName)
-            if (isAdmin) {
+            if (isAdmin && prefs.lockModeOn) {
                 removeActiveAdmin("Admin permission removed.")
                 prefs.lockModeOn = false
+            } else if (isAdmin) {
+                prefs.doubleTapAppEnabled = false
+                prefs.lockModeOn = true
             } else {
                 val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
                 intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName)
@@ -423,6 +444,16 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
             }
         }
         populateLockSettings()
+        populateDoubleTapApp()
+    }
+
+    private fun toggleDoubleTapApp() {
+        if (prefs.appPackageDoubleTap.isBlank()) return
+        prefs.doubleTapAppEnabled = !prefs.doubleTapAppEnabled
+        if (prefs.doubleTapAppEnabled)
+            prefs.lockModeOn = false
+        populateLockSettings()
+        populateDoubleTapApp()
     }
 
     private fun removeActiveAdmin(toastMessage: String? = null) {
@@ -619,14 +650,15 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
     // }
 
     private fun populateLockSettings() {
+        val lockModeEnabled = prefs.lockModeOn && !prefs.doubleTapAppEnabled
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             binding.toggleLock.text = getString(
-                if (prefs.lockModeOn && isAccessServiceEnabled(requireContext())) R.string.on
+                if (lockModeEnabled && isAccessServiceEnabled(requireContext())) R.string.on
                 else R.string.off
             )
         } else {
             binding.toggleLock.text = getString(
-                if (prefs.lockModeOn) R.string.on
+                if (lockModeEnabled) R.string.on
                 else R.string.off
             )
         }
@@ -654,6 +686,16 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
             binding.swipeRightApp.setTextColor(requireContext().getColorFromAttr(R.attr.primaryColorTrans50))
     }
 
+    private fun populateDoubleTapApp() {
+        binding.doubleTapApp.text = prefs.appNameDoubleTap.ifBlank { getString(R.string.off) }
+        binding.doubleTapApp.setTextColor(
+            requireContext().getColorFromAttr(
+                if (prefs.doubleTapAppEnabled) R.attr.primaryColor
+                else R.attr.primaryColorTrans50
+            )
+        )
+    }
+
 //    private fun populateDigitalWellbeing() {
 //        binding.digitalWellbeing.isVisible = requireContext().isPackageInstalled(Constants.DIGITAL_WELLBEING_PACKAGE_NAME).not()
 //                && requireContext().isPackageInstalled(Constants.DIGITAL_WELLBEING_SAMSUNG_PACKAGE_NAME).not()
@@ -673,6 +715,14 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
         findNavController().navigate(
             R.id.action_settingsFragment_to_appListFragment,
             bundleOf(Constants.Key.FLAG to flag)
+        )
+    }
+
+    private fun showDoubleTapAppList() {
+        viewModel.getAppList(true)
+        findNavController().navigate(
+            R.id.action_settingsFragment_to_appListFragment,
+            bundleOf(Constants.Key.FLAG to Constants.FLAG_SET_DOUBLE_TAP_APP)
         )
     }
 

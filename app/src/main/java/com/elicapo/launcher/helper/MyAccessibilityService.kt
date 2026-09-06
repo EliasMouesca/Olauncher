@@ -15,7 +15,9 @@ class MyAccessibilityService : AccessibilityService() {
     }
 
     override fun onServiceConnected() {
-        Prefs(applicationContext).lockModeOn = true
+        val prefs = Prefs(applicationContext)
+        if (!prefs.doubleTapAppEnabled)
+            prefs.lockModeOn = true
         super.onServiceConnected()
     }
 

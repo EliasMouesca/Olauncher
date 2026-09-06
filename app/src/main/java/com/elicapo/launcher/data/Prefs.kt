@@ -89,6 +89,10 @@ class Prefs(context: Context) {
     private val APP_ACTIVITY_CLASS_NAME_SWIPE_RIGHT = "APP_ACTIVITY_CLASS_NAME_SWIPE_RIGHT"
     private val APP_USER_SWIPE_LEFT = "APP_USER_SWIPE_LEFT"
     private val APP_USER_SWIPE_RIGHT = "APP_USER_SWIPE_RIGHT"
+    private val APP_NAME_DOUBLE_TAP = "APP_NAME_DOUBLE_TAP"
+    private val APP_PACKAGE_DOUBLE_TAP = "APP_PACKAGE_DOUBLE_TAP"
+    private val APP_ACTIVITY_CLASS_NAME_DOUBLE_TAP = "APP_ACTIVITY_CLASS_NAME_DOUBLE_TAP"
+    private val APP_USER_DOUBLE_TAP = "APP_USER_DOUBLE_TAP"
     private val CLOCK_APP_PACKAGE = "CLOCK_APP_PACKAGE"
     private val CLOCK_APP_USER = "CLOCK_APP_USER"
     private val CLOCK_APP_CLASS_NAME = "CLOCK_APP_CLASS_NAME"
@@ -121,6 +125,9 @@ class Prefs(context: Context) {
     private val IS_SHORTCUT_SWIPE_LEFT = "IS_SHORTCUT_SWIPE_LEFT"
     private val SHORTCUT_ID_SWIPE_RIGHT = "SHORTCUT_ID_SWIPE_RIGHT"
     private val IS_SHORTCUT_SWIPE_RIGHT = "IS_SHORTCUT_SWIPE_RIGHT"
+    private val SHORTCUT_ID_DOUBLE_TAP = "SHORTCUT_ID_DOUBLE_TAP"
+    private val IS_SHORTCUT_DOUBLE_TAP = "IS_SHORTCUT_DOUBLE_TAP"
+    private val DOUBLE_TAP_APP_ENABLED = "DOUBLE_TAP_APP_ENABLED"
 
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_FILENAME, 0)
 
@@ -147,6 +154,10 @@ class Prefs(context: Context) {
     var lockModeOn: Boolean
         get() = prefs.getBoolean(LOCK_MODE, false)
         set(value) = prefs.edit { putBoolean(LOCK_MODE, value).apply() }
+
+    var doubleTapAppEnabled: Boolean
+        get() = prefs.getBoolean(DOUBLE_TAP_APP_ENABLED, false)
+        set(value) = prefs.edit { putBoolean(DOUBLE_TAP_APP_ENABLED, value).apply() }
 
     var autoShowKeyboard: Boolean
         get() = prefs.getBoolean(AUTO_SHOW_KEYBOARD, true)
@@ -425,6 +436,22 @@ class Prefs(context: Context) {
         get() = prefs.getString(APP_USER_SWIPE_RIGHT, "").toString()
         set(value) = prefs.edit { putString(APP_USER_SWIPE_RIGHT, value).apply() }
 
+    var appNameDoubleTap: String
+        get() = prefs.getString(APP_NAME_DOUBLE_TAP, "").toString()
+        set(value) = prefs.edit { putString(APP_NAME_DOUBLE_TAP, value).apply() }
+
+    var appPackageDoubleTap: String
+        get() = prefs.getString(APP_PACKAGE_DOUBLE_TAP, "").toString()
+        set(value) = prefs.edit { putString(APP_PACKAGE_DOUBLE_TAP, value).apply() }
+
+    var appActivityClassNameDoubleTap: String?
+        get() = prefs.getString(APP_ACTIVITY_CLASS_NAME_DOUBLE_TAP, "").toString()
+        set(value) = prefs.edit { putString(APP_ACTIVITY_CLASS_NAME_DOUBLE_TAP, value).apply() }
+
+    var appUserDoubleTap: String
+        get() = prefs.getString(APP_USER_DOUBLE_TAP, "").toString()
+        set(value) = prefs.edit { putString(APP_USER_DOUBLE_TAP, value).apply() }
+
     var clockAppPackage: String
         get() = prefs.getString(CLOCK_APP_PACKAGE, "").toString()
         set(value) = prefs.edit { putString(CLOCK_APP_PACKAGE, value).apply() }
@@ -621,6 +648,14 @@ class Prefs(context: Context) {
         get() = prefs.getBoolean(IS_SHORTCUT_SWIPE_RIGHT, false)
         set(value) = prefs.edit { putBoolean(IS_SHORTCUT_SWIPE_RIGHT, value) }
 
+    var shortcutIdDoubleTap: String
+        get() = prefs.getString(SHORTCUT_ID_DOUBLE_TAP, "").toString()
+        set(value) = prefs.edit { putString(SHORTCUT_ID_DOUBLE_TAP, value) }
+
+    var isShortcutDoubleTap: Boolean
+        get() = prefs.getBoolean(IS_SHORTCUT_DOUBLE_TAP, false)
+        set(value) = prefs.edit { putBoolean(IS_SHORTCUT_DOUBLE_TAP, value) }
+
     fun getAppName(location: Int): String {
         return when (location) {
             1 -> prefs.getString(APP_NAME_1, "").toString()
@@ -727,6 +762,7 @@ class Prefs(context: Context) {
         if (screenTimeAppPackage == packageName) screenTimeAppClassName = activityClassName
         if (appPackageSwipeLeft == packageName) appActivityClassNameSwipeLeft = activityClassName
         if (appPackageSwipeRight == packageName) appActivityClassNameRight = activityClassName
+        if (appPackageDoubleTap == packageName) appActivityClassNameDoubleTap = activityClassName
     }
 
     fun getAppRenameLabel(appPackage: String): String = prefs.getString(appPackage, "").toString()
