@@ -14,6 +14,7 @@ Widgets are hosted by `HomeFragment` through `LauncherAppWidgetHost` using the s
 
 Double-tap app actions follow the swipe-app persistence pattern in `Prefs`, including activity, user profile, and pinned-shortcut data. Selecting an app enables it and disables double-tap locking; long-pressing the configured app toggles it off so the existing lock action can be enabled again. Keep this mode precedence synchronized between `SettingsFragment` and `HomeFragment`.
 The app drawer is opened through Navigation actions with a vertical slide from the bottom and closed with the matching slide out. `AppDrawerFragment` separately staggers app rows from the bottom; both fragment and row animations must continue to respect disabled system animations and e-ink displays.
+The swipe touch listeners use `GestureDetector`'s native long-press threshold. Do not add a second delayed callback after `onLongPress`, because that makes launcher actions feel about twice as slow and can leave unnecessary coroutine work behind.
 This fork does not surface self-promotional content in the app. Do not add review/share requests, external-app recommendations, donation or affiliate prompts, social-follow links, scheduled announcements, or optional onboarding tips. Keep functional settings, permission explanations, and error feedback; update both orientation layouts and every localized `strings.xml` when user-visible content changes.
 
 ## Build, Test, and Development Commands

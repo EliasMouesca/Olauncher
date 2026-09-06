@@ -111,4 +111,6 @@
     <string name="invalid_shortcut">Érvénytelen parancsikon</string>
     <string name="shortcut_not_found">A parancsikon nem található</string>
     <string name="unable_to_open_shortcut">Nem lehet megnyitni a parancsikont</string>
+    <string name="change_wallpaper">Háttérkép módosítása</string>
+    <string name="wallpaper_picker_unavailable">A háttérképválasztó nem érhető el</string>
 </resources><!-- Hungarian -->

@@ -112,4 +112,6 @@
     <string name="invalid_shortcut">Nieprawidłowy skrót</string>
     <string name="shortcut_not_found">Nie znaleziono skrótu</string>
     <string name="unable_to_open_shortcut">Nie można otworzyć skrótu</string>
+    <string name="change_wallpaper">Zmień tapetę</string>
+    <string name="wallpaper_picker_unavailable">Selektor tapet jest niedostępny</string>
 </resources><!-- Polish -->

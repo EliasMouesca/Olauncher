@@ -111,4 +111,6 @@
     <string name="invalid_shortcut">無効なショートカットです</string>
     <string name="shortcut_not_found">ショートカットが見つかりません</string>
     <string name="unable_to_open_shortcut">ショートカットを開けません</string>
+    <string name="change_wallpaper">壁紙を変更</string>
+    <string name="wallpaper_picker_unavailable">壁紙ピッカーを利用できません</string>
 </resources> <!-- Japanese -->

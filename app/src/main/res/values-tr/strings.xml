@@ -112,4 +112,6 @@
     <string name="invalid_shortcut">Geçersiz kısayol</string>
     <string name="shortcut_not_found">Kısayol bulunamadı</string>
     <string name="unable_to_open_shortcut">Kısayol açılamıyor</string>
+    <string name="change_wallpaper">Duvar kağıdını değiştir</string>
+    <string name="wallpaper_picker_unavailable">Duvar kağıdı seçici kullanılamıyor</string>
 </resources><!-- Turkish -->
