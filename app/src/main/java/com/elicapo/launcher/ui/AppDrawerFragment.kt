@@ -155,7 +155,7 @@ class AppDrawerFragment : BaseFragment() {
                         }
                     }
                 }
-                viewModel.getAppList()
+                viewModel.getAppList(forceRefresh = true)
             },
             appHideListener = { appModel, position ->
                 if (appModel is AppModel.PinnedShortcut) {
@@ -176,7 +176,7 @@ class AppDrawerFragment : BaseFragment() {
                 prefs.hiddenApps = newSet
                 if (newSet.isEmpty())
                     findNavController().popBackStack()
-                viewModel.getAppList()
+                viewModel.getAppList(forceRefresh = true)
                 viewModel.getHiddenApps()
             },
             appRenameListener = { appModel, renameLabel ->
@@ -186,7 +186,7 @@ class AppDrawerFragment : BaseFragment() {
                     else -> return@AppDrawerAdapter
                 }
                 prefs.setAppRenameLabel(identifier, renameLabel)
-                viewModel.getAppList()
+                viewModel.getAppList(forceRefresh = true)
             },
             privateSpaceToggleListener = {
                 viewModel.togglePrivateSpaceLock()

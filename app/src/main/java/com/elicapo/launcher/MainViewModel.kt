@@ -32,6 +32,7 @@ import com.elicapo.launcher.helper.isPackageInstalled
 import com.elicapo.launcher.helper.isPrivateSpaceLocked
 import com.elicapo.launcher.helper.showToast
 import com.elicapo.launcher.helper.usageStats.EventLogWrapper
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
@@ -40,6 +41,10 @@ import java.util.concurrent.TimeUnit
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val appContext by lazy { application.applicationContext }
     private val prefs = Prefs(appContext)
+    private var appListLoadJob: Job? = null
+    private var appListLoadIncludesHiddenApps: Boolean? = null
+    private var appListRequestId = 0L
+    private var appListIncludesHiddenApps = false
 
     val refreshHome = MutableLiveData<Boolean>()
     val toggleDateTime = MutableLiveData<Unit>()
@@ -415,10 +420,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun getAppList(includeHiddenApps: Boolean = false) {
-        viewModelScope.launch {
+    fun getAppList(includeHiddenApps: Boolean = false, forceRefresh: Boolean = false) {
+        val hasMatchingCache = appList.value != null && appListIncludesHiddenApps == includeHiddenApps
+        val hasMatchingLoad = appListLoadJob?.isActive == true
+                && appListLoadIncludesHiddenApps == includeHiddenApps
+        if (!forceRefresh && (hasMatchingCache || hasMatchingLoad)) return
+
+        appListRequestId++
+        val requestId = appListRequestId
+        appListLoadJob?.cancel()
+        appListLoadIncludesHiddenApps = includeHiddenApps
+        appListLoadJob = viewModelScope.launch {
             val apps = getAppsList(appContext, prefs, includeRegularApps = true, includeHiddenApps)
+            if (requestId != appListRequestId) return@launch
+            appListIncludesHiddenApps = includeHiddenApps
             appList.value = apps
+            appListLoadJob = null
+            appListLoadIncludesHiddenApps = null
         }
         getPrivateSpaceAppList()
     }
