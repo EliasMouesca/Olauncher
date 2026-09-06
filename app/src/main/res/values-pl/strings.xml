@@ -76,6 +76,7 @@
     <string name="home_layout_alignment">Wyrównanie aplikacji</string>
     <string name="swipe_left_app">Przesuń w lewo aplikację</string>
     <string name="swipe_right_app">Przesuń w prawo aplikację</string>
+    <string name="double_tap_app">Aplikacja na dwuklik</string>
     <string name="auto_show_keyboard">Automatyczne wyświetlanie klawiatury</string>
     <string name="hide">Ukryj</string>
     <string name="status_bar">Pokaż pasek stanu</string>

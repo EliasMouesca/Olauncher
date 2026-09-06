@@ -31,6 +31,7 @@
     <string name="home_layout_alignment">Penyelarasan aplikasi</string>
     <string name="swipe_left_app">Geser aplikasi ke kiri</string>
     <string name="swipe_right_app">Geser aplikasi ke kanan</string>
+    <string name="double_tap_app">Aplikasi ketuk dua kali</string>
     <string name="_0">0</string>
     <string name="_1">1</string>
     <string name="_2">2</string>
