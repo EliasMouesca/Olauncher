@@ -114,4 +114,6 @@
     <string name="unable_to_open_shortcut">Nie można otworzyć skrótu</string>
     <string name="change_wallpaper">Zmień tapetę</string>
     <string name="wallpaper_picker_unavailable">Selektor tapet jest niedostępny</string>
+    <string name="bold_font">Pogrubiona czcionka</string>
+    <string name="unable_to_open_app_info">Nie można otworzyć informacji o aplikacji</string>
 </resources><!-- Polish -->

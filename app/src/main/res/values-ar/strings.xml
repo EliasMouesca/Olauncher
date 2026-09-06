@@ -114,4 +114,6 @@
     <string name="unable_to_open_shortcut">يتعذر فتح الاختصار</string>
     <string name="change_wallpaper">تغيير الخلفية</string>
     <string name="wallpaper_picker_unavailable">منتقي الخلفية غير متاح</string>
+    <string name="bold_font">خط عريض</string>
+    <string name="unable_to_open_app_info">يتعذر فتح معلومات التطبيق</string>
 </resources>

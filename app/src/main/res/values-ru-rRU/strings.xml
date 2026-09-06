@@ -113,4 +113,6 @@
     <string name="unable_to_open_shortcut">Не удалось открыть ярлык</string>
     <string name="change_wallpaper">Изменить обои</string>
     <string name="wallpaper_picker_unavailable">Выбор обоев недоступен</string>
+    <string name="bold_font">Жирный шрифт</string>
+    <string name="unable_to_open_app_info">Не удалось открыть информацию о приложении</string>
 </resources><!-- Russian -->

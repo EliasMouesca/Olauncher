@@ -113,4 +113,6 @@
     <string name="unable_to_open_shortcut">Det går inte att öppna genvägen</string>
     <string name="change_wallpaper">Byt bakgrund</string>
     <string name="wallpaper_picker_unavailable">Bakgrundsväljaren är inte tillgänglig</string>
+    <string name="bold_font">Fet stil</string>
+    <string name="unable_to_open_app_info">Det går inte att öppna appinformationen</string>
 </resources><!-- Swedish -->

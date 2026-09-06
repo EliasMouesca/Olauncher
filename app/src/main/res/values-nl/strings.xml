@@ -113,4 +113,6 @@
     <string name="unable_to_open_shortcut">Kan snelkoppeling niet openen</string>
     <string name="change_wallpaper">Achtergrond wijzigen</string>
     <string name="wallpaper_picker_unavailable">Achtergrondkiezer niet beschikbaar</string>
+    <string name="bold_font">Vet lettertype</string>
+    <string name="unable_to_open_app_info">Kan app-informatie niet openen</string>
 </resources><!-- Dutch -->

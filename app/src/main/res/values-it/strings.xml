@@ -113,4 +113,6 @@
     <string name="unable_to_open_shortcut">Impossibile aprire la scorciatoia</string>
     <string name="change_wallpaper">Cambia sfondo</string>
     <string name="wallpaper_picker_unavailable">Selettore sfondi non disponibile</string>
+    <string name="bold_font">Carattere grassetto</string>
+    <string name="unable_to_open_app_info">Impossibile aprire le informazioni dell’app</string>
 </resources><!-- Italian -->

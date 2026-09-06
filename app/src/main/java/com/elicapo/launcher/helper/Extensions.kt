@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.AppOpsManager
 import android.app.SearchManager
 import android.app.role.RoleManager
+import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -59,6 +60,8 @@ fun Context.resetDefaultLauncher() {
             PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
             PackageManager.DONT_KILL_APP
         )
+        // This must remain implicit so Android presents the system HOME resolver.
+        @SuppressLint("UnsafeImplicitIntentLaunch")
         val selector = Intent(Intent.ACTION_MAIN)
         selector.addCategory(Intent.CATEGORY_HOME)
         startActivity(selector)

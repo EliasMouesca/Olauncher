@@ -731,6 +731,10 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
         // If it's a shortcut, verify it still exists
         if (isShortcut) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N_MR1) {
+                textView.text = ""
+                return false
+            }
             val launcherApps = requireContext().getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
 
             // Query for the specific shortcut
