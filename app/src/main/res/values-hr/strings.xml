@@ -112,4 +112,6 @@
     <string name="invalid_shortcut">Nevažeći prečac</string>
     <string name="shortcut_not_found">Prečac nije pronađen</string>
     <string name="unable_to_open_shortcut">Prečac nije moguće otvoriti</string>
+    <string name="change_wallpaper">Promijeni pozadinu</string>
+    <string name="wallpaper_picker_unavailable">Birač pozadine nije dostupan</string>
 </resources><!-- Croatian -->

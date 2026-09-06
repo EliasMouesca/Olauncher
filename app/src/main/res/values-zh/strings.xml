@@ -113,4 +113,6 @@
     <string name="invalid_shortcut">无效的快捷方式</string>
     <string name="shortcut_not_found">未找到快捷方式</string>
     <string name="unable_to_open_shortcut">无法打开快捷方式</string>
+    <string name="change_wallpaper">更改壁纸</string>
+    <string name="wallpaper_picker_unavailable">壁纸选择器不可用</string>
 </resources><!-- Chinese -->

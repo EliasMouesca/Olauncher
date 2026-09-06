@@ -112,4 +112,6 @@
     <string name="invalid_shortcut">Ungültige Verknüpfung</string>
     <string name="shortcut_not_found">Verknüpfung nicht gefunden</string>
     <string name="unable_to_open_shortcut">Verknüpfung kann nicht geöffnet werden</string>
+    <string name="change_wallpaper">Hintergrund ändern</string>
+    <string name="wallpaper_picker_unavailable">Hintergrundauswahl nicht verfügbar</string>
 </resources>

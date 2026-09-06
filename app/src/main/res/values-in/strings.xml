@@ -111,4 +111,6 @@
     <string name="invalid_shortcut">Pintasan tidak valid</string>
     <string name="shortcut_not_found">Pintasan tidak ditemukan</string>
     <string name="unable_to_open_shortcut">Tidak dapat membuka pintasan</string>
+    <string name="change_wallpaper">Ubah wallpaper</string>
+    <string name="wallpaper_picker_unavailable">Pemilih wallpaper tidak tersedia</string>
 </resources><!-- Indonesian -->

@@ -111,4 +111,6 @@
     <string name="invalid_shortcut">Недійсний ярлик</string>
     <string name="shortcut_not_found">Ярлик не знайдено</string>
     <string name="unable_to_open_shortcut">Не вдалося відкрити ярлик</string>
+    <string name="change_wallpaper">Змінити шпалери</string>
+    <string name="wallpaper_picker_unavailable">Вибір шпалер недоступний</string>
 </resources><!-- Ukrainian -->

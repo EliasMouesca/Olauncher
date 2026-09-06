@@ -111,4 +111,6 @@
     <string name="invalid_shortcut">Scorciatoia non valida</string>
     <string name="shortcut_not_found">Scorciatoia non trovata</string>
     <string name="unable_to_open_shortcut">Impossibile aprire la scorciatoia</string>
+    <string name="change_wallpaper">Cambia sfondo</string>
+    <string name="wallpaper_picker_unavailable">Selettore sfondi non disponibile</string>
 </resources><!-- Italian -->

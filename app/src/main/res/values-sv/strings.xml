@@ -111,4 +111,6 @@
     <string name="invalid_shortcut">Ogiltig genväg</string>
     <string name="shortcut_not_found">Genvägen hittades inte</string>
     <string name="unable_to_open_shortcut">Det går inte att öppna genvägen</string>
+    <string name="change_wallpaper">Byt bakgrund</string>
+    <string name="wallpaper_picker_unavailable">Bakgrundsväljaren är inte tillgänglig</string>
 </resources><!-- Swedish -->

@@ -458,6 +458,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     private fun showHomeLongPressMenu() {
         val actions = arrayOf(
             getString(R.string.add_widget),
+            getString(R.string.change_wallpaper),
             getString(R.string.widget_settings),
         )
         AlertDialog.Builder(requireContext())
@@ -465,10 +466,19 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             .setItems(actions) { _, which ->
                 when (which) {
                     0 -> showWidgetPicker()
-                    1 -> openHomeSettings()
+                    1 -> openWallpaperPicker()
+                    2 -> openHomeSettings()
                 }
             }
             .show()
+    }
+
+    private fun openWallpaperPicker() {
+        runCatching {
+            startActivity(Intent(Intent.ACTION_SET_WALLPAPER))
+        }.onFailure {
+            requireContext().showToast(R.string.wallpaper_picker_unavailable)
+        }
     }
 
     private fun openHomeSettings() {

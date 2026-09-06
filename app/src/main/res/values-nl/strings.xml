@@ -111,4 +111,6 @@
     <string name="invalid_shortcut">Ongeldige snelkoppeling</string>
     <string name="shortcut_not_found">Snelkoppeling niet gevonden</string>
     <string name="unable_to_open_shortcut">Kan snelkoppeling niet openen</string>
+    <string name="change_wallpaper">Achtergrond wijzigen</string>
+    <string name="wallpaper_picker_unavailable">Achtergrondkiezer niet beschikbaar</string>
 </resources><!-- Dutch -->

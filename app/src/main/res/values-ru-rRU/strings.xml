@@ -111,4 +111,6 @@
     <string name="invalid_shortcut">Недопустимый ярлык</string>
     <string name="shortcut_not_found">Ярлык не найден</string>
     <string name="unable_to_open_shortcut">Не удалось открыть ярлык</string>
+    <string name="change_wallpaper">Изменить обои</string>
+    <string name="wallpaper_picker_unavailable">Выбор обоев недоступен</string>
 </resources><!-- Russian -->

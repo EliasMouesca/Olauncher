@@ -111,4 +111,6 @@
     <string name="invalid_shortcut">Atalho inválido</string>
     <string name="shortcut_not_found">Atalho não encontrado</string>
     <string name="unable_to_open_shortcut">Não é possível abrir o atalho</string>
+    <string name="change_wallpaper">Alterar papel de parede</string>
+    <string name="wallpaper_picker_unavailable">Seletor de papel de parede indisponível</string>
 </resources><!-- Portuguese -->

@@ -110,4 +110,6 @@
     <string name="invalid_shortcut">קיצור דרך לא חוקי</string>
     <string name="shortcut_not_found">קיצור הדרך לא נמצא</string>
     <string name="unable_to_open_shortcut">לא ניתן לפתוח את קיצור הדרך</string>
+    <string name="change_wallpaper">שינוי טפט</string>
+    <string name="wallpaper_picker_unavailable">בורר הטפטים אינו זמין</string>
 </resources>
