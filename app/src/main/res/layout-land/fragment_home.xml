@@ -195,16 +195,6 @@
 
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/firstRunTips"
-        style="@style/TextSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginHorizontal="8dp"
-        android:layout_marginBottom="56dp"
-        android:text="@string/swipe_up_for_apps" />
-
     <!-- Set default launcher -->
     <TextView
         android:id="@+id/setDefaultLauncher"
@@ -220,19 +210,4 @@
         android:text="@string/set_as_default_launcher_u"
         android:visibility="gone" />
 
-    <TextView
-        android:id="@+id/widgetEditHint"
-        style="@style/TextSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginBottom="96dp"
-        android:background="@drawable/rounded_rectangle_dark"
-        android:clickable="false"
-        android:focusable="false"
-        android:paddingHorizontal="12dp"
-        android:paddingVertical="8dp"
-        android:textAlignment="center"
-        android:visibility="gone" />
 </FrameLayout>

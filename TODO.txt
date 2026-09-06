@@ -1,3 +1,2 @@
 - Hacer que double tap pueda abrir una app
 - Font linda
-- Sacar todas las propagandas y anuncios de otras aplicaciones
