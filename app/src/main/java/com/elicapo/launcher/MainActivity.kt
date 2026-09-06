@@ -33,6 +33,7 @@ import com.elicapo.launcher.helper.isTablet
 import com.elicapo.launcher.helper.resetLauncherViaFakeActivity
 import com.elicapo.launcher.helper.setPlainWallpaper
 import com.elicapo.launcher.helper.showLauncherSelector
+import com.elicapo.launcher.ui.HomeFragment
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -260,6 +261,12 @@ class MainActivity : AppCompatActivity() {
     @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == Constants.REQUEST_CODE_WIDGET_CONFIG) {
+            // AppWidgetHost starts configuration through the activity, so route its result to the home fragment.
+            val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment)
+            val homeFragment = navHostFragment?.childFragmentManager?.primaryNavigationFragment as? HomeFragment
+            homeFragment?.handleActivityResult(requestCode, resultCode, data)
+        }
         when (requestCode) {
             Constants.REQUEST_CODE_ENABLE_ADMIN -> {
                 if (resultCode == Activity.RESULT_OK)

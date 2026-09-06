@@ -559,12 +559,14 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         val providerInfo = appWidgetManager.getAppWidgetInfo(widgetId) ?: choice.info
         val configurationActivity = providerInfo.configure
         if (configurationActivity != null) {
+            // The host API supports providers whose configuration activity is not exported.
             runCatching {
-                startActivityForResult(
-                    Intent().setComponent(configurationActivity).apply {
-                        putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
-                    },
+                appWidgetHost.startAppWidgetConfigureActivityForResult(
+                    requireActivity(),
+                    widgetId,
+                    0,
                     Constants.REQUEST_CODE_WIDGET_CONFIG,
+                    null,
                 )
             }.onFailure {
                 deletePendingWidget()
@@ -646,11 +648,12 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         val configurationActivity = providerInfo.configure ?: return
         configuringWidgetId = appWidgetId
         runCatching {
-            startActivityForResult(
-                Intent().setComponent(configurationActivity).apply {
-                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-                },
+            appWidgetHost.startAppWidgetConfigureActivityForResult(
+                requireActivity(),
+                appWidgetId,
+                0,
                 Constants.REQUEST_CODE_WIDGET_CONFIG,
+                null,
             )
         }.onFailure {
             configuringWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
@@ -667,6 +670,10 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        handleActivityResult(requestCode, resultCode, data)
+    }
+
+    fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         when (requestCode) {
             Constants.REQUEST_CODE_WIDGET_BIND -> {
                 if (resultCode == Activity.RESULT_OK) {
