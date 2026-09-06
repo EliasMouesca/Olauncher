@@ -1,16 +1,11 @@
 package com.elicapo.launcher.ui
 
 import android.os.Build
-import android.os.Bundle
 import android.os.Process
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.view.animation.AnimationUtils
 import android.widget.TextView
 import androidx.appcompat.widget.SearchView
-import androidx.fragment.app.activityViewModels
-import androidx.navigation.fragment.findNavController
+import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Recycler
@@ -23,7 +18,6 @@ import com.elicapo.launcher.databinding.FragmentAppDrawerBinding
 import com.elicapo.launcher.helper.deletePinnedShortcut
 import com.elicapo.launcher.helper.hideKeyboard
 import com.elicapo.launcher.helper.isEinkDisplay
-import com.elicapo.launcher.helper.isSystemAnimationsDisabled
 import com.elicapo.launcher.helper.isSystemApp
 import com.elicapo.launcher.helper.openAppInfo
 import com.elicapo.launcher.helper.openSearch
@@ -32,9 +26,15 @@ import com.elicapo.launcher.helper.showKeyboard
 import com.elicapo.launcher.helper.showToast
 import com.elicapo.launcher.helper.uninstall
 
-class AppDrawerFragment : BaseFragment() {
+class AppDrawerController(
+    private val binding: FragmentAppDrawerBinding,
+    private val lifecycleOwner: LifecycleOwner,
+    private val viewModel: MainViewModel,
+    private val prefs: Prefs,
+    private val onCloseRequested: (DrawerReturnTarget) -> Unit,
+) {
 
-    private lateinit var prefs: Prefs
+    private val context = binding.root.context
     private lateinit var adapter: AppDrawerAdapter
     private lateinit var linearLayoutManager: LinearLayoutManager
 
@@ -42,44 +42,49 @@ class AppDrawerFragment : BaseFragment() {
     private var canRename = false
     private var currentAppList: List<AppModel>? = null
     private var currentPrivateSpaceApps: List<AppModel>? = null
-    private var currentPrivateSpaceLocked: Boolean = true
-    private var currentPrivateSpaceAvailable: Boolean = false
+    private var currentPrivateSpaceLocked = true
+    private var currentPrivateSpaceAvailable = false
+    private var initialized = false
 
-    private val viewModel: MainViewModel by activityViewModels()
-    private var _binding: FragmentAppDrawerBinding? = null
-    private val binding get() = _binding!!
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): View {
-        _binding = FragmentAppDrawerBinding.inflate(inflater, container, false)
-        return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        prefs = Prefs(requireContext())
-        arguments?.let {
-            flag = it.getInt(Constants.Key.FLAG, Constants.FLAG_LAUNCH_APP)
-            canRename = it.getBoolean(Constants.Key.RENAME, false)
-        }
-
+    fun initialize() {
+        if (initialized) return
         initViews()
         initSearch()
         initAdapter()
         initObservers()
         initClickListeners()
+        initialized = true
+    }
+
+    fun configure(request: AppDrawerRequest) {
+        initialize()
+        flag = request.flag
+        canRename = request.canRename
+        adapter.setFlag(flag)
+        adapter.setAppLabelGravity(prefs.appLabelAlignment)
+        updateSearchHint()
+        binding.search.findViewById<TextView>(R.id.search_src_text)?.gravity = prefs.appLabelAlignment
+        binding.appRename.visibility = View.GONE
+        binding.search.setQuery("", false)
+        binding.search.clearFocus()
+
+        if (flag == Constants.FLAG_HIDDEN_APPS) {
+            viewModel.hiddenApps.value?.let { adapter.setAppList(it.toMutableList()) }
+        } else {
+            updateCombinedAppList()
+        }
+    }
+
+    fun onDrawerOpened() {
+        binding.search.showKeyboard(prefs.autoShowKeyboard)
+    }
+
+    fun onDrawerClosed() {
+        binding.search.hideKeyboard()
     }
 
     private fun initViews() {
-        if (flag == Constants.FLAG_HIDDEN_APPS)
-            binding.search.queryHint = getString(R.string.hidden_apps)
-        else if (flag in Constants.FLAG_SET_HOME_APP_1..Constants.FLAG_SET_CALENDAR_APP
-            || flag == Constants.FLAG_SET_DOUBLE_TAP_APP
-        )
-            binding.search.queryHint = "Please select an app"
+        updateSearchHint()
         try {
             binding.search.findViewById<TextView>(R.id.search_src_text)?.gravity = prefs.appLabelAlignment
         } catch (e: Exception) {
@@ -87,13 +92,22 @@ class AppDrawerFragment : BaseFragment() {
         }
     }
 
+    private fun updateSearchHint() {
+        binding.search.queryHint = when {
+            flag == Constants.FLAG_HIDDEN_APPS -> context.getString(R.string.hidden_apps)
+            flag in Constants.FLAG_SET_HOME_APP_1..Constants.FLAG_SET_CALENDAR_APP
+                    || flag == Constants.FLAG_SET_DOUBLE_TAP_APP -> "Please select an app"
+            else -> " ___"
+        }
+    }
+
     private fun initSearch() {
         binding.search.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 if (query?.startsWith("!") == true)
-                    requireContext().openUrl(Constants.URL_DUCK_SEARCH + query.replace(" ", "%20"))
+                    context.openUrl(Constants.URL_DUCK_SEARCH + query.replace(" ", "%20"))
                 else if (adapter.itemCount == 0)
-                    requireContext().openSearch(query?.trim())
+                    context.openSearch(query?.trim())
                 else
                     adapter.launchFirstInList()
                 return true
@@ -120,24 +134,20 @@ class AppDrawerFragment : BaseFragment() {
             appClickListener = { appModel ->
                 viewModel.selectedApp(appModel, flag)
                 if (flag == Constants.FLAG_LAUNCH_APP || flag == Constants.FLAG_HIDDEN_APPS)
-                    findNavController().popBackStack(R.id.mainFragment, false)
+                    onCloseRequested(DrawerReturnTarget.HOME)
                 else
-                    findNavController().popBackStack()
+                    onCloseRequested(DrawerReturnTarget.CURRENT)
             },
             appInfoListener = {
-                openAppInfo(
-                    requireContext(),
-                    it.user,
-                    it.appPackage
-                )
-                findNavController().popBackStack(R.id.mainFragment, false)
+                openAppInfo(context, it.user, it.appPackage)
+                onCloseRequested(DrawerReturnTarget.HOME)
             },
             appDeleteListener = { appModel ->
                 when (appModel) {
                     is AppModel.PrivateSpaceHeader -> {}
                     is AppModel.PinnedShortcut ->
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
-                            requireContext().deletePinnedShortcut(
+                            context.deletePinnedShortcut(
                                 packageName = appModel.appPackage,
                                 shortcutIdToDelete = appModel.shortcutId,
                                 user = appModel.user,
@@ -146,12 +156,12 @@ class AppDrawerFragment : BaseFragment() {
 
                     is AppModel.App -> {
                         if (appModel.user != Process.myUserHandle()) {
-                            openAppInfo(requireContext(), appModel.user, appModel.appPackage)
-                        } else if (requireContext().isSystemApp(appModel.appPackage, appModel.user)) {
-                            requireContext().showToast(getString(R.string.system_app_cannot_delete))
-                            openAppInfo(requireContext(), appModel.user, appModel.appPackage)
+                            openAppInfo(context, appModel.user, appModel.appPackage)
+                        } else if (context.isSystemApp(appModel.appPackage, appModel.user)) {
+                            context.showToast(context.getString(R.string.system_app_cannot_delete))
+                            openAppInfo(context, appModel.user, appModel.appPackage)
                         } else {
-                            requireContext().uninstall(appModel.appPackage)
+                            context.uninstall(appModel.appPackage)
                         }
                     }
                 }
@@ -159,7 +169,7 @@ class AppDrawerFragment : BaseFragment() {
             },
             appHideListener = { appModel, position ->
                 if (appModel is AppModel.PinnedShortcut) {
-                    requireContext().showToast("Hiding pinned shortcuts is not supported")
+                    context.showToast("Hiding pinned shortcuts is not supported")
                     return@AppDrawerAdapter
                 }
                 adapter.appFilteredList.removeAt(position)
@@ -175,7 +185,7 @@ class AppDrawerFragment : BaseFragment() {
 
                 prefs.hiddenApps = newSet
                 if (newSet.isEmpty())
-                    findNavController().popBackStack()
+                    onCloseRequested(DrawerReturnTarget.CURRENT)
                 viewModel.getAppList(forceRefresh = true)
                 viewModel.getHiddenApps()
             },
@@ -193,11 +203,11 @@ class AppDrawerFragment : BaseFragment() {
             },
             privateSpaceSettingsListener = {
                 viewModel.openPrivateSpaceSettings()
-                findNavController().popBackStack(R.id.mainFragment, false)
+                onCloseRequested(DrawerReturnTarget.HOME)
             }
         )
 
-        linearLayoutManager = object : LinearLayoutManager(requireContext()) {
+        linearLayoutManager = object : LinearLayoutManager(context) {
             override fun scrollVerticallyBy(
                 dx: Int,
                 recycler: Recycler,
@@ -215,39 +225,31 @@ class AppDrawerFragment : BaseFragment() {
         binding.recyclerView.adapter = adapter
         binding.recyclerView.addOnScrollListener(getRecyclerViewOnScrollListener())
         binding.recyclerView.itemAnimator = null
-        if (requireContext().isEinkDisplay())
+        if (context.isEinkDisplay())
             binding.recyclerView.overScrollMode = View.OVER_SCROLL_NEVER
-        else if (requireContext().isSystemAnimationsDisabled().not())
-            binding.recyclerView.layoutAnimation =
-                AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.layout_anim_from_bottom)
     }
 
     private fun initObservers() {
-        if (flag == Constants.FLAG_HIDDEN_APPS) {
-            viewModel.hiddenApps.observe(viewLifecycleOwner) {
-                it?.let {
-                    adapter.setAppList(it.toMutableList())
-                }
-            }
-        } else {
-            viewModel.appList.observe(viewLifecycleOwner) {
-                currentAppList = it
+        viewModel.hiddenApps.observe(lifecycleOwner) {
+            if (flag == Constants.FLAG_HIDDEN_APPS)
+                it?.let { adapter.setAppList(it.toMutableList()) }
+        }
+        viewModel.appList.observe(lifecycleOwner) {
+            currentAppList = it
+            if (flag != Constants.FLAG_HIDDEN_APPS)
                 updateCombinedAppList()
-            }
-            if (flag == Constants.FLAG_LAUNCH_APP) {
-                viewModel.privateSpaceAvailable.observe(viewLifecycleOwner) {
-                    currentPrivateSpaceAvailable = it
-                    updateCombinedAppList()
-                }
-                viewModel.privateSpaceLocked.observe(viewLifecycleOwner) {
-                    currentPrivateSpaceLocked = it
-                    updateCombinedAppList()
-                }
-                viewModel.privateSpaceApps.observe(viewLifecycleOwner) {
-                    currentPrivateSpaceApps = it
-                    updateCombinedAppList()
-                }
-            }
+        }
+        viewModel.privateSpaceAvailable.observe(lifecycleOwner) {
+            currentPrivateSpaceAvailable = it
+            if (flag == Constants.FLAG_LAUNCH_APP) updateCombinedAppList()
+        }
+        viewModel.privateSpaceLocked.observe(lifecycleOwner) {
+            currentPrivateSpaceLocked = it
+            if (flag == Constants.FLAG_LAUNCH_APP) updateCombinedAppList()
+        }
+        viewModel.privateSpaceApps.observe(lifecycleOwner) {
+            currentPrivateSpaceApps = it
+            if (flag == Constants.FLAG_LAUNCH_APP) updateCombinedAppList()
         }
     }
 
@@ -257,9 +259,8 @@ class AppDrawerFragment : BaseFragment() {
 
         if (flag == Constants.FLAG_LAUNCH_APP && currentPrivateSpaceAvailable) {
             combined.add(AppModel.PrivateSpaceHeader(isLocked = currentPrivateSpaceLocked))
-            if (!currentPrivateSpaceLocked) {
+            if (!currentPrivateSpaceLocked)
                 currentPrivateSpaceApps?.let { combined.addAll(it) }
-            }
         }
 
         adapter.setAppList(combined)
@@ -270,7 +271,7 @@ class AppDrawerFragment : BaseFragment() {
         binding.appRename.setOnClickListener {
             val name = binding.search.query.toString().trim()
             if (name.isEmpty()) {
-                requireContext().showToast(getString(R.string.type_a_new_app_name_first))
+                context.showToast(context.getString(R.string.type_a_new_app_name_first))
                 binding.search.showKeyboard()
                 return@setOnClickListener
             }
@@ -285,7 +286,7 @@ class AppDrawerFragment : BaseFragment() {
                 Constants.FLAG_SET_HOME_APP_7 -> prefs.appName7 = name
                 Constants.FLAG_SET_HOME_APP_8 -> prefs.appName8 = name
             }
-            findNavController().popBackStack()
+            onCloseRequested(DrawerReturnTarget.CURRENT)
         }
     }
 
@@ -308,7 +309,7 @@ class AppDrawerFragment : BaseFragment() {
                         if (!recyclerView.canScrollVertically(1))
                             binding.search.hideKeyboard()
                         else if (!recyclerView.canScrollVertically(-1))
-                            if (!onTop && isRemoving.not())
+                            if (!onTop)
                                 binding.search.showKeyboard(prefs.autoShowKeyboard)
                     }
                 }
@@ -317,21 +318,7 @@ class AppDrawerFragment : BaseFragment() {
     }
 
     private fun exitOnTopOverscroll() {
-        findNavController().popBackStack()
+        onCloseRequested(DrawerReturnTarget.CURRENT)
     }
 
-    override fun onStart() {
-        super.onStart()
-        binding.search.showKeyboard(prefs.autoShowKeyboard)
-    }
-
-    override fun onStop() {
-        binding.search.hideKeyboard()
-        super.onStop()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
 }

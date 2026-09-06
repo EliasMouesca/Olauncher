@@ -13,6 +13,7 @@ import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.View
 import android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -24,6 +25,7 @@ import androidx.navigation.findNavController
 import com.elicapo.launcher.data.Constants
 import com.elicapo.launcher.data.Prefs
 import com.elicapo.launcher.databinding.ActivityMainBinding
+import com.elicapo.launcher.databinding.FragmentAppDrawerBinding
 import com.elicapo.launcher.helper.getColorFromAttr
 import com.elicapo.launcher.helper.hasBeenHours
 import com.elicapo.launcher.helper.isDarkThemeOn
@@ -33,12 +35,17 @@ import com.elicapo.launcher.helper.isTablet
 import com.elicapo.launcher.helper.resetLauncherViaFakeActivity
 import com.elicapo.launcher.helper.setPlainWallpaper
 import com.elicapo.launcher.helper.showLauncherSelector
+import com.elicapo.launcher.ui.AppDrawerController
+import com.elicapo.launcher.ui.AppDrawerHost
+import com.elicapo.launcher.ui.AppDrawerRequest
+import com.elicapo.launcher.ui.DrawerHostLayout
+import com.elicapo.launcher.ui.DrawerReturnTarget
 import com.elicapo.launcher.ui.HomeFragment
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), AppDrawerHost {
 
     private lateinit var prefs: Prefs
     private lateinit var navController: NavController
@@ -47,6 +54,9 @@ class MainActivity : AppCompatActivity() {
     private var timerJob: Job? = null
     private var profileReceiver: BroadcastReceiver? = null
     private var launcherAppsCallback: LauncherApps.Callback? = null
+    private lateinit var drawerHost: DrawerHostLayout
+    private lateinit var navHostView: View
+    private var appDrawerController: AppDrawerController? = null
 
 //    override fun onBackPressed() {
 //        if (navController.currentDestination?.id != R.id.mainFragment)
@@ -69,11 +79,40 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        drawerHost = binding.mainActivityLayout
+        navHostView = binding.root.findViewById(R.id.nav_host_fragment)
         navController = this.findNavController(R.id.nav_host_fragment)
         viewModel = ViewModelProvider(this)[MainViewModel::class.java]
 
+        drawerHost.onInteractiveDrawerStart = {
+            if (navController.currentDestination?.id != R.id.mainFragment) {
+                false
+            } else {
+                val controller = ensureAppDrawer()
+                viewModel.getAppList()
+                controller.configure(AppDrawerRequest(Constants.FLAG_LAUNCH_APP))
+                true
+            }
+        }
+        drawerHost.onDrawerProgress = { progress ->
+            navHostView.alpha = 1f - progress
+        }
+        drawerHost.onDrawerOpened = {
+            appDrawerController?.onDrawerOpened()
+        }
+        drawerHost.onDrawerClosed = {
+            appDrawerController?.onDrawerClosed()
+        }
+        binding.root.postOnAnimation {
+            if (!isFinishing) ensureAppDrawer()
+        }
+
         val onBackPressedCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+                if (drawerHost.isDrawerVisible()) {
+                    closeAppDrawer()
+                    return
+                }
                 if (navController.currentDestination?.id != R.id.mainFragment) {
                     // then we might want to finish the activity or disable this callback.
                     if (navController.popBackStack()) {
@@ -190,6 +229,28 @@ class MainActivity : AppCompatActivity() {
         super.onNewIntent(intent)
     }
 
+    override fun showAppDrawer(request: AppDrawerRequest) {
+        val controller = ensureAppDrawer()
+        if (request.flag == Constants.FLAG_HIDDEN_APPS)
+            viewModel.getHiddenApps()
+        else
+            viewModel.getAppList(request.includeHiddenApps)
+        controller.configure(request)
+        drawerHost.showDrawer()
+    }
+
+    override fun closeAppDrawer(target: DrawerReturnTarget, animated: Boolean) {
+        if (!drawerHost.isDrawerVisible()) {
+            if (target == DrawerReturnTarget.HOME) backToHomeScreen()
+            return
+        }
+
+        drawerHost.closeDrawer(animated) {
+            if (target == DrawerReturnTarget.HOME)
+                backToHomeScreen()
+        }
+    }
+
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         AppCompatDelegate.setDefaultNightMode(prefs.appTheme)
@@ -222,8 +283,27 @@ class MainActivity : AppCompatActivity() {
 
     private fun backToHomeScreen() {
         if (viewModel.isPrivateSpaceToggling) return
+        if (::drawerHost.isInitialized && drawerHost.isDrawerVisible())
+            drawerHost.closeDrawer(animated = false)
         if (navController.currentDestination?.id != R.id.mainFragment)
             navController.popBackStack(R.id.mainFragment, false)
+    }
+
+    private fun ensureAppDrawer(): AppDrawerController {
+        appDrawerController?.let { return it }
+
+        val drawerView = binding.appDrawerStub.inflate()
+        drawerHost.attachDrawer(drawerView)
+        return AppDrawerController(
+            binding = FragmentAppDrawerBinding.bind(drawerView),
+            lifecycleOwner = this,
+            viewModel = viewModel,
+            prefs = prefs,
+            onCloseRequested = { target -> closeAppDrawer(target) },
+        ).also {
+            it.initialize()
+            appDrawerController = it
+        }
     }
 
     private fun setPlainWallpaper() {

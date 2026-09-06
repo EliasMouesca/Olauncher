@@ -27,7 +27,7 @@ import java.text.Normalizer
 
 class AppDrawerAdapter(
     private var flag: Int,
-    private val appLabelGravity: Int,
+    private var appLabelGravity: Int,
     private val appClickListener: (AppModel) -> Unit,
     private val appInfoListener: (AppModel) -> Unit,
     private val appDeleteListener: (AppModel) -> Unit,
@@ -125,6 +125,18 @@ class AppDrawerAdapter(
     }
 
     override fun getFilter(): Filter = this.appFilter
+
+    fun setFlag(flag: Int) {
+        if (this.flag == flag) return
+        this.flag = flag
+        notifyItemRangeChanged(0, itemCount)
+    }
+
+    fun setAppLabelGravity(gravity: Int) {
+        if (appLabelGravity == gravity) return
+        appLabelGravity = gravity
+        notifyItemRangeChanged(0, itemCount)
+    }
 
     private fun createAppFilter(): Filter {
         return object : Filter() {

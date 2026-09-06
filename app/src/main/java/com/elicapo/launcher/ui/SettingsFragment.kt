@@ -15,10 +15,8 @@ import android.view.ViewGroup
 import android.view.WindowInsets
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.fragment.findNavController
 import com.elicapo.launcher.BuildConfig
 import com.elicapo.launcher.MainViewModel
 import com.elicapo.launcher.R
@@ -163,7 +161,9 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
         when (view.id) {
             R.id.alignment -> {
                 prefs.appLabelAlignment = prefs.homeAlignment
-                findNavController().navigate(R.id.action_settingsFragment_to_appListFragment)
+                (requireActivity() as AppDrawerHost).showAppDrawer(
+                    AppDrawerRequest(Constants.FLAG_LAUNCH_APP)
+                )
                 requireContext().showToast(getString(R.string.alignment_changed))
             }
 
@@ -342,10 +342,8 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
             requireContext().showToast(getString(R.string.no_hidden_apps))
             return
         }
-        viewModel.getHiddenApps()
-        findNavController().navigate(
-            R.id.action_settingsFragment_to_appListFragment,
-            bundleOf(Constants.Key.FLAG to Constants.FLAG_HIDDEN_APPS)
+        (requireActivity() as AppDrawerHost).showAppDrawer(
+            AppDrawerRequest(Constants.FLAG_HIDDEN_APPS)
         )
     }
 
@@ -669,18 +667,20 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
             requireContext().showToast(getString(R.string.long_press_to_enable))
             return
         }
-        viewModel.getAppList(true)
-        findNavController().navigate(
-            R.id.action_settingsFragment_to_appListFragment,
-            bundleOf(Constants.Key.FLAG to flag)
+        (requireActivity() as AppDrawerHost).showAppDrawer(
+            AppDrawerRequest(
+                flag = flag,
+                includeHiddenApps = true,
+            )
         )
     }
 
     private fun showDoubleTapAppList() {
-        viewModel.getAppList(true)
-        findNavController().navigate(
-            R.id.action_settingsFragment_to_appListFragment,
-            bundleOf(Constants.Key.FLAG to Constants.FLAG_SET_DOUBLE_TAP_APP)
+        (requireActivity() as AppDrawerHost).showAppDrawer(
+            AppDrawerRequest(
+                flag = Constants.FLAG_SET_DOUBLE_TAP_APP,
+                includeHiddenApps = true,
+            )
         )
     }
 

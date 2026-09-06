@@ -11,13 +11,6 @@
         android:label="main_fragment"
         tools:layout="@layout/fragment_home">
         <action
-            android:id="@+id/action_mainFragment_to_appListFragment"
-            app:destination="@id/appListFragment"
-            app:enterAnim="@anim/slide_in_bottom"
-            app:exitAnim="@anim/fade_exit"
-            app:popEnterAnim="@anim/fade_enter"
-            app:popExitAnim="@anim/slide_out_bottom" />
-        <action
             android:id="@+id/action_mainFragment_to_settingsFragment"
             app:destination="@id/settingsFragment"
             app:enterAnim="@anim/fade_enter"
@@ -27,23 +20,10 @@
     </fragment>
 
     <fragment
-        android:id="@+id/appListFragment"
-        android:name="com.elicapo.launcher.ui.AppDrawerFragment"
-        android:label="app_list_fragment"
-        tools:layout="@layout/fragment_app_drawer">
-    </fragment>
-    <fragment
         android:id="@+id/settingsFragment"
         android:name="com.elicapo.launcher.ui.SettingsFragment"
         android:label="SettingsFragment"
         android:layout="@layout/fragment_settings">
-        <action
-            android:id="@+id/action_settingsFragment_to_appListFragment"
-            app:destination="@id/appListFragment"
-            app:enterAnim="@anim/slide_in_bottom"
-            app:exitAnim="@anim/fade_exit"
-            app:popEnterAnim="@anim/fade_enter"
-            app:popExitAnim="@anim/slide_out_bottom" />
     </fragment>
 
 </navigation>

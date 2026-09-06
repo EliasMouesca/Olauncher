@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.elicapo.launcher.ui.DrawerHostLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mainActivityLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:animateLayoutChanges="true">
+    android:clipChildren="false">
 
     <fragment
         android:id="@+id/nav_host_fragment"
@@ -16,4 +16,11 @@
         app:navGraph="@navigation/nav_graph"
         tools:ignore="FragmentTagUsage" />
 
-</FrameLayout>
+    <ViewStub
+        android:id="@+id/appDrawerStub"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:inflatedId="@+id/appDrawerLayout"
+        android:layout="@layout/fragment_app_drawer" />
+
+</com.elicapo.launcher.ui.DrawerHostLayout>
