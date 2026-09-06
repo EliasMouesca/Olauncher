@@ -1,6 +1,10 @@
 package com.elicapo.launcher.ui
 
+import android.app.Activity
 import android.app.admin.DevicePolicyManager
+import android.app.AlertDialog
+import android.appwidget.AppWidgetManager
+import android.appwidget.AppWidgetProviderInfo
 import android.content.Context
 import android.content.Intent
 import android.content.pm.LauncherApps
@@ -8,6 +12,8 @@ import android.content.res.Configuration
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
+import android.os.UserHandle
+import android.os.UserManager
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -29,6 +35,7 @@ import com.elicapo.launcher.R
 import com.elicapo.launcher.data.AppModel
 import com.elicapo.launcher.data.Constants
 import com.elicapo.launcher.data.Prefs
+import com.elicapo.launcher.data.WidgetPlacement
 import com.elicapo.launcher.databinding.FragmentHomeBinding
 import com.elicapo.launcher.helper.appUsagePermissionGranted
 import com.elicapo.launcher.helper.dpToPx
@@ -36,6 +43,8 @@ import com.elicapo.launcher.helper.expandNotificationDrawer
 import com.elicapo.launcher.helper.getChangedAppTheme
 import com.elicapo.launcher.helper.getUserHandleFromString
 import com.elicapo.launcher.helper.isPackageInstalled
+import com.elicapo.launcher.helper.isPrivateSpaceLocked
+import com.elicapo.launcher.helper.isPrivateSpaceProfile
 import com.elicapo.launcher.helper.openAlarmApp
 import com.elicapo.launcher.helper.openCalendar
 import com.elicapo.launcher.helper.openCameraApp
@@ -51,12 +60,22 @@ import java.util.Locale
 
 class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListener {
 
+    private data class WidgetProviderChoice(
+        val info: AppWidgetProviderInfo,
+        val user: UserHandle,
+    )
+
     private lateinit var prefs: Prefs
     private lateinit var viewModel: MainViewModel
     private lateinit var deviceManager: DevicePolicyManager
+    private lateinit var appWidgetManager: AppWidgetManager
+    private lateinit var appWidgetHost: LauncherAppWidgetHost
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
+    private var pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+    private var pendingWidgetProvider: WidgetProviderChoice? = null
+    private var configuringWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
@@ -71,6 +90,26 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         } ?: throw Exception("Invalid Activity")
 
         deviceManager = context?.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+        appWidgetManager = requireContext().getSystemService(AppWidgetManager::class.java)
+        appWidgetHost = LauncherAppWidgetHost(requireContext(), Constants.APP_WIDGET_HOST_ID)
+        binding.widgetCanvas.setWidgetLongClickListener(::showWidgetOptions)
+        binding.widgetCanvas.setPlacementChangedListener { placement ->
+            prefs.upsertWidgetPlacement(placement)
+        }
+        binding.widgetCanvas.setInteractionStateListener { mode ->
+            binding.widgetEditHint.apply {
+                text = when (mode) {
+                    WidgetCanvasView.InteractionMode.MOVE -> getString(R.string.widget_editing_move)
+                    WidgetCanvasView.InteractionMode.RESIZE -> getString(R.string.widget_editing_resize)
+                    null -> ""
+                }
+                isVisible = mode != null
+            }
+        }
+        binding.widgetScrollView.setOnLongClickListener {
+            showHomeLongPressMenu()
+            true
+        }
 
         initObservers()
         setHomeAlignment(prefs.homeAlignment)
@@ -81,9 +120,21 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     override fun onResume() {
         super.onResume()
         populateHomeScreen(false)
+        restoreWidgets()
         viewModel.isOlauncherDefault()
         if (prefs.showStatusBar) showStatusBar()
         else hideStatusBar()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        runCatching { appWidgetHost.startListening() }
+        binding.widgetCanvas.post { restoreWidgets() }
+    }
+
+    override fun onStop() {
+        runCatching { appWidgetHost.stopListening() }
+        super.onStop()
     }
 
     override fun onClick(view: View) {
@@ -380,6 +431,295 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         }
     }
 
+    private fun restoreWidgets() {
+        if (!::appWidgetHost.isInitialized || _binding == null) return
+
+        val savedPlacements = prefs.widgetPlacements
+        binding.widgetCanvas.clearWidgetViews()
+        binding.widgetCanvas.setPlacements(savedPlacements)
+
+        savedPlacements.forEach { placement ->
+            val providerInfo = runCatching { appWidgetManager.getAppWidgetInfo(placement.appWidgetId) }
+                .getOrNull()
+                ?.takeIf { it.provider == placement.provider }
+
+            if (providerInfo == null) {
+                binding.widgetCanvas.addWidgetView(placement, createUnavailableWidgetView())
+                return@forEach
+            }
+
+            val hostView = runCatching {
+                appWidgetHost.createView(requireContext(), placement.appWidgetId, providerInfo)
+            }.getOrNull()
+            if (hostView != null) {
+                binding.widgetCanvas.addWidgetView(placement, hostView)
+            } else {
+                binding.widgetCanvas.addWidgetView(placement, createUnavailableWidgetView())
+            }
+        }
+    }
+
+    private fun createUnavailableWidgetView(): TextView = TextView(requireContext()).apply {
+        styleTextSmall()
+        text = getString(R.string.widget_unavailable)
+        gravity = Gravity.CENTER
+        setPadding(12.dpToPx())
+        isClickable = false
+    }
+
+    private fun TextView.styleTextSmall() {
+        setTextAppearance(requireContext(), R.style.TextSmall)
+    }
+
+    private fun showHomeLongPressMenu() {
+        val actions = arrayOf(
+            getString(R.string.add_widget),
+            getString(R.string.widget_settings),
+        )
+        AlertDialog.Builder(requireContext())
+            .setTitle(R.string.home_screen)
+            .setItems(actions) { _, which ->
+                when (which) {
+                    0 -> showWidgetPicker()
+                    1 -> openHomeSettings()
+                }
+            }
+            .show()
+    }
+
+    private fun openHomeSettings() {
+        try {
+            findNavController().navigate(R.id.action_mainFragment_to_settingsFragment)
+            viewModel.firstOpen(false)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun showWidgetPicker() {
+        val choices = getWidgetProviderChoices()
+        if (choices.isEmpty()) {
+            requireContext().showToast(R.string.no_widgets_available)
+            return
+        }
+
+        val labels = choices.map { choice ->
+            val widgetLabel = choice.info.loadLabel(requireContext().packageManager).toString()
+            val providerLabel = choice.info.provider.packageName
+            "$widgetLabel · $providerLabel"
+        }.toTypedArray()
+
+        AlertDialog.Builder(requireContext())
+            .setTitle(R.string.widgets)
+            .setItems(labels) { _, which -> startWidgetAdd(choices[which]) }
+            .setNegativeButton(R.string.not_now, null)
+            .show()
+    }
+
+    private fun getWidgetProviderChoices(): List<WidgetProviderChoice> {
+        val userManager = requireContext().getSystemService(UserManager::class.java)
+        return userManager.userProfiles
+            .filterNot { isPrivateSpaceProfile(requireContext(), it) && isPrivateSpaceLocked(requireContext(), it) }
+            .flatMap { user ->
+                runCatching {
+                    appWidgetManager.getInstalledProvidersForProfile(user)
+                        .map { WidgetProviderChoice(it, user) }
+                }.getOrDefault(emptyList())
+            }
+            .sortedWith(compareBy { it.info.loadLabel(requireContext().packageManager).toString().lowercase(Locale.getDefault()) })
+    }
+
+    private fun startWidgetAdd(choice: WidgetProviderChoice) {
+        pendingWidgetProvider = choice
+        pendingWidgetId = runCatching { appWidgetHost.allocateAppWidgetId() }
+            .getOrDefault(AppWidgetManager.INVALID_APPWIDGET_ID)
+        if (pendingWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
+            pendingWidgetProvider = null
+            requireContext().showToast(R.string.widget_add_failed)
+            return
+        }
+
+        val options = Bundle()
+        val bound = runCatching {
+            appWidgetManager.bindAppWidgetIdIfAllowed(
+                pendingWidgetId,
+                choice.user,
+                choice.info.provider,
+                options,
+            )
+        }.getOrDefault(false)
+
+        if (bound) {
+            completePendingWidget()
+            return
+        }
+
+        val bindIntent = Intent(AppWidgetManager.ACTION_APPWIDGET_BIND).apply {
+            putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, pendingWidgetId)
+            putExtra(AppWidgetManager.EXTRA_APPWIDGET_PROVIDER, choice.info.provider)
+            putExtra(AppWidgetManager.EXTRA_APPWIDGET_PROVIDER_PROFILE, choice.user)
+            putExtra(AppWidgetManager.EXTRA_APPWIDGET_OPTIONS, options)
+        }
+        runCatching {
+            startActivityForResult(bindIntent, Constants.REQUEST_CODE_WIDGET_BIND)
+        }.onFailure {
+            deletePendingWidget()
+            requireContext().showToast(R.string.widget_bind_failed)
+        }
+    }
+
+    private fun completePendingWidget() {
+        val widgetId = pendingWidgetId
+        val choice = pendingWidgetProvider
+        if (widgetId == AppWidgetManager.INVALID_APPWIDGET_ID || choice == null) return
+
+        val providerInfo = appWidgetManager.getAppWidgetInfo(widgetId) ?: choice.info
+        val configurationActivity = providerInfo.configure
+        if (configurationActivity != null) {
+            runCatching {
+                startActivityForResult(
+                    Intent().setComponent(configurationActivity).apply {
+                        putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
+                    },
+                    Constants.REQUEST_CODE_WIDGET_CONFIG,
+                )
+            }.onFailure {
+                deletePendingWidget()
+                requireContext().showToast(R.string.widget_config_failed)
+            }
+        } else {
+            savePendingWidget(providerInfo)
+        }
+    }
+
+    private fun savePendingWidget(providerInfo: AppWidgetProviderInfo) {
+        val widgetId = pendingWidgetId
+        val choice = pendingWidgetProvider ?: return
+        val (spanX, spanY) = binding.widgetCanvas.calculateSpans(
+            providerInfo.minWidth,
+            providerInfo.minHeight,
+        )
+        val (cellX, cellY) = binding.widgetCanvas.findAvailablePosition(spanX, spanY)
+        val placement = WidgetPlacement(
+            appWidgetId = widgetId,
+            providerPackage = providerInfo.provider.packageName,
+            providerClass = providerInfo.provider.className,
+            user = choice.user.toString(),
+            cellX = cellX,
+            cellY = cellY,
+            spanX = spanX,
+            spanY = spanY,
+        )
+        prefs.upsertWidgetPlacement(placement)
+        pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+        pendingWidgetProvider = null
+        restoreWidgets()
+        requireContext().showToast(R.string.widget_added)
+    }
+
+    private fun deletePendingWidget() {
+        if (pendingWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
+            runCatching { appWidgetHost.deleteAppWidgetId(pendingWidgetId) }
+        }
+        pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+        pendingWidgetProvider = null
+    }
+
+    private fun showWidgetOptions(placement: WidgetPlacement) {
+        val providerInfo = appWidgetManager.getAppWidgetInfo(placement.appWidgetId)
+            ?.takeIf { it.provider == placement.provider }
+        val actions = mutableListOf<Pair<String, () -> Unit>>()
+        if (providerInfo != null) {
+            actions += getString(R.string.widget_move) to {
+                binding.widgetCanvas.beginInteraction(
+                    placement.appWidgetId,
+                    WidgetCanvasView.InteractionMode.MOVE,
+                )
+                requireContext().showToast(R.string.widget_drag_to_move)
+            }
+            if (providerInfo.resizeMode != AppWidgetProviderInfo.RESIZE_NONE) {
+                actions += getString(R.string.widget_resize) to {
+                    binding.widgetCanvas.beginInteraction(
+                        placement.appWidgetId,
+                        WidgetCanvasView.InteractionMode.RESIZE,
+                    )
+                    requireContext().showToast(R.string.widget_drag_to_resize)
+                }
+            }
+            if (providerInfo.configure != null) {
+                actions += getString(R.string.widget_configure) to {
+                    configureExistingWidget(placement.appWidgetId, providerInfo)
+                }
+            }
+        }
+        actions += getString(R.string.widget_remove) to { removeWidget(placement) }
+
+        AlertDialog.Builder(requireContext())
+            .setTitle(R.string.widget_options)
+            .setItems(actions.map { it.first }.toTypedArray()) { _, which -> actions[which].second() }
+            .setNegativeButton(R.string.not_now, null)
+            .show()
+    }
+
+    private fun configureExistingWidget(appWidgetId: Int, providerInfo: AppWidgetProviderInfo) {
+        val configurationActivity = providerInfo.configure ?: return
+        configuringWidgetId = appWidgetId
+        runCatching {
+            startActivityForResult(
+                Intent().setComponent(configurationActivity).apply {
+                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+                },
+                Constants.REQUEST_CODE_WIDGET_CONFIG,
+            )
+        }.onFailure {
+            configuringWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+            requireContext().showToast(R.string.widget_config_failed)
+        }
+    }
+
+    private fun removeWidget(placement: WidgetPlacement) {
+        runCatching { appWidgetHost.deleteAppWidgetId(placement.appWidgetId) }
+        prefs.removeWidgetPlacement(placement.appWidgetId)
+        binding.widgetCanvas.removeWidgetView(placement.appWidgetId)
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        when (requestCode) {
+            Constants.REQUEST_CODE_WIDGET_BIND -> {
+                if (resultCode == Activity.RESULT_OK) {
+                    completePendingWidget()
+                } else {
+                    deletePendingWidget()
+                    requireContext().showToast(R.string.widget_bind_failed)
+                }
+            }
+
+            Constants.REQUEST_CODE_WIDGET_CONFIG -> {
+                when {
+                    pendingWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID -> {
+                        if (resultCode == Activity.RESULT_OK) {
+                            val choice = pendingWidgetProvider
+                            val providerInfo = appWidgetManager.getAppWidgetInfo(pendingWidgetId)
+                                ?: choice?.info
+                            if (providerInfo != null) savePendingWidget(providerInfo)
+                            else deletePendingWidget()
+                        } else {
+                            deletePendingWidget()
+                            requireContext().showToast(R.string.widget_config_cancelled)
+                        }
+                    }
+
+                    configuringWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID -> {
+                        configuringWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+                        restoreWidgets()
+                    }
+                }
+            }
+        }
+    }
+
     private fun setHomeAppText(
         textView: TextView,
         appName: String,
@@ -670,12 +1010,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
             override fun onLongClick() {
                 super.onLongClick()
-                try {
-                    findNavController().navigate(R.id.action_mainFragment_to_settingsFragment)
-                    viewModel.firstOpen(false)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+                showHomeLongPressMenu()
             }
 
             override fun onDoubleClick() {

@@ -5,6 +5,8 @@ import android.content.SharedPreferences
 import android.view.Gravity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.edit
+import org.json.JSONArray
+import org.json.JSONObject
 
 class Prefs(context: Context) {
     private val PREFS_FILENAME = "com.elicapo.launcher"
@@ -96,6 +98,7 @@ class Prefs(context: Context) {
     private val SCREEN_TIME_APP_PACKAGE = "SCREEN_TIME_APP_PACKAGE"
     private val SCREEN_TIME_APP_USER = "SCREEN_TIME_APP_USER"
     private val SCREEN_TIME_APP_CLASS_NAME = "SCREEN_TIME_APP_CLASS_NAME"
+    private val APP_WIDGET_PLACEMENTS = "APP_WIDGET_PLACEMENTS"
 
     private val IS_SHORTCUT_1 = "IS_SHORTCUT_1"
     private val SHORTCUT_ID_1 = "SHORTCUT_ID_1"
@@ -457,6 +460,86 @@ class Prefs(context: Context) {
     var screenTimeAppClassName: String?
         get() = prefs.getString(SCREEN_TIME_APP_CLASS_NAME, "").toString()
         set(value) = prefs.edit { putString(SCREEN_TIME_APP_CLASS_NAME, value).apply() }
+
+    /**
+     * Widget locations are kept together so adding future launcher layout fields does not require
+     * another set of numbered preference keys. Invalid entries are ignored individually, allowing
+     * the rest of the home screen to load after a provider has been uninstalled or a preference
+     * migration was interrupted.
+     */
+    var widgetPlacements: List<WidgetPlacement>
+        get() {
+            val saved = prefs.getString(APP_WIDGET_PLACEMENTS, null) ?: return emptyList()
+            return runCatching {
+                // Accept the first implementation's bare array as well as the current versioned
+                // object so a future schema change can migrate without losing home placement.
+                val widgets = if (saved.trimStart().startsWith("[")) {
+                    JSONArray(saved)
+                } else {
+                    JSONObject(saved).optJSONArray("widgets") ?: JSONArray()
+                }
+                buildList {
+                    for (index in 0 until widgets.length()) {
+                        val widget = widgets.optJSONObject(index) ?: continue
+                        val appWidgetId = widget.optInt("appWidgetId", -1)
+                        val providerPackage = widget.optString("providerPackage")
+                        val providerClass = widget.optString("providerClass")
+                        val user = widget.optString("user")
+                        if (appWidgetId < 0 || providerPackage.isBlank() || providerClass.isBlank())
+                            continue
+                        add(
+                            WidgetPlacement(
+                                appWidgetId = appWidgetId,
+                                providerPackage = providerPackage,
+                                providerClass = providerClass,
+                                user = user,
+                                cellX = widget.optInt("cellX", 0),
+                                cellY = widget.optInt("cellY", 0),
+                                spanX = widget.optInt("spanX", 1),
+                                spanY = widget.optInt("spanY", 1),
+                            )
+                        )
+                    }
+                }
+            }.getOrDefault(emptyList())
+        }
+        set(value) {
+            val widgets = JSONArray().apply {
+                value.forEach { placement ->
+                    put(
+                        JSONObject().apply {
+                            put("appWidgetId", placement.appWidgetId)
+                            put("providerPackage", placement.providerPackage)
+                            put("providerClass", placement.providerClass)
+                            put("user", placement.user)
+                            put("cellX", placement.cellX)
+                            put("cellY", placement.cellY)
+                            put("spanX", placement.spanX)
+                            put("spanY", placement.spanY)
+                        }
+                    )
+                }
+            }
+            prefs.edit {
+                putString(
+                    APP_WIDGET_PLACEMENTS,
+                    JSONObject().apply {
+                        put("version", 1)
+                        put("widgets", widgets)
+                    }.toString()
+                ).apply()
+            }
+        }
+
+    fun upsertWidgetPlacement(placement: WidgetPlacement) {
+        widgetPlacements = widgetPlacements
+            .filterNot { it.appWidgetId == placement.appWidgetId }
+            .plus(placement)
+    }
+
+    fun removeWidgetPlacement(appWidgetId: Int) {
+        widgetPlacements = widgetPlacements.filterNot { it.appWidgetId == appWidgetId }
+    }
 
     var isShortcut1: Boolean
         get() = prefs.getBoolean(IS_SHORTCUT_1, false)

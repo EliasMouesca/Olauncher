@@ -73,6 +73,21 @@
         tools:text="2h 11m"
         tools:visibility="visible" />
 
+    <!-- App widgets. The canvas is transparent; widget providers own their visual style. -->
+    <com.elicapo.launcher.ui.WidgetScrollView
+        android:id="@+id/widgetScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:scrollbars="none">
+
+        <com.elicapo.launcher.ui.WidgetCanvasView
+            android:id="@+id/widgetCanvas"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </com.elicapo.launcher.ui.WidgetScrollView>
+
     <!-- Home apps-->
     <LinearLayout
         android:id="@+id/homeAppsLayout"
@@ -204,5 +219,21 @@
         android:ellipsize="end"
         android:maxLines="1"
         android:text="@string/set_as_default_launcher_u"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/widgetEditHint"
+        style="@style/TextSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="96dp"
+        android:background="@drawable/rounded_rectangle_dark"
+        android:clickable="false"
+        android:focusable="false"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp"
+        android:textAlignment="center"
         android:visibility="gone" />
 </FrameLayout>

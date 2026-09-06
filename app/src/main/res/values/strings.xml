@@ -169,6 +169,25 @@
     <string name="notification_bar">Notification bar</string>
     <string name="private_space">Private space</string>
     <string name="invalid_pin_request">Invalid pin request</string>
+    <string name="widgets" translatable="false">Widgets</string>
+    <string name="add_widget" translatable="false">Add widget</string>
+    <string name="widget_options" translatable="false">Widget options</string>
+    <string name="widget_move" translatable="false">Move</string>
+    <string name="widget_resize" translatable="false">Resize</string>
+    <string name="widget_configure" translatable="false">Configure</string>
+    <string name="widget_remove" translatable="false">Remove</string>
+    <string name="widget_added" translatable="false">Widget added</string>
+    <string name="widget_add_failed" translatable="false">Could not add widget</string>
+    <string name="no_widgets_available" translatable="false">No widgets are available</string>
+    <string name="widget_unavailable" translatable="false">This widget is no longer available</string>
+    <string name="widget_bind_failed" translatable="false">Could not grant widget permission</string>
+    <string name="widget_config_failed" translatable="false">Widget configuration failed</string>
+    <string name="widget_config_cancelled" translatable="false">Widget configuration cancelled</string>
+    <string name="widget_drag_to_move" translatable="false">Drag the widget to move it</string>
+    <string name="widget_drag_to_resize" translatable="false">Drag the widget to resize it</string>
+    <string name="widget_editing_move" translatable="false">Moving widget · drag to move it</string>
+    <string name="widget_editing_resize" translatable="false">Resizing widget · drag to resize it</string>
+    <string name="widget_settings" translatable="false">Home settings</string>
     <string name="widgets_not_supported">Widgets are not supported</string>
     <string name="pin_action_not_supported">This pin action is not supported</string>
     <string name="shortcut_pinned">Shortcut added</string>

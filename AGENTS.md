@@ -10,6 +10,8 @@ Keep this file as the fork’s contributor guide. When work reveals a reusable c
 
 This repository contains one Android application module, `app/`. Kotlin production code is under `app/src/main/java/com/elicapo/launcher/`, organized into feature/UI, data, listener, and helper packages. Android manifests, layouts, drawables, XML configuration, and localized strings live in `app/src/main/`. JVM unit tests are under `app/src/test/`; place device or framework-dependent tests under `app/src/androidTest/`. Release metadata and screenshots are maintained in `fastlane/metadata/`. Root Gradle files and `gradle/libs.versions.toml` define shared build configuration and dependency versions.
 
+Widgets are hosted by `HomeFragment` through `LauncherAppWidgetHost` using the stable host ID in `Constants`. Widget instances are persisted as version-tolerant JSON in `Prefs`; `WidgetCanvasView` owns the invisible four-column placement grid, while `EditableAppWidgetHostView` detects long-press editing at the host parent and forwards only active move/resize gestures to the canvas, leaving normal provider touch handling intact. Keep the external `PinItemActivity` flow and the home-host flow in sync when changing widget persistence or placement behavior.
+
 ## Build, Test, and Development Commands
 
 Use the Gradle wrapper from the repository root:
@@ -29,6 +31,8 @@ Follow standard Kotlin and Android Studio formatting: four-space indentation, tr
 ## Testing Guidelines
 
 Unit tests use JUnit 4 and mirror production packages, for example `app/src/test/java/com/elicapo/launcher/data/ShortcutIdentityTest.kt`. Name test classes with a `Test` suffix and test behavior, including edge cases. Add or update tests for data and utility changes; run `./gradlew test` before submitting. Verify UI, lifecycle, or device-specific behavior with `androidTest` on a representative emulator or device.
+
+For widget changes, validate provider selection, binding permission, configuration cancellation, resize/move/remove, launcher recreation, provider uninstallation, and profile behavior on at least one API 24+ device. Widgets requiring binding permission must be tested with the launcher set as the default home app.
 
 ## Commit & Pull Request Guidelines
 
