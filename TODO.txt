@@ -1,0 +1,5 @@
+- Soportar widgets
+- Hacer que double tap pueda abrir una app
+- Sacar todas las propagandas y anuncios de otras aplicaciones
+- Cambiar ícono y nombre de la app
+- Font linda
