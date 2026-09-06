@@ -1,2 +1,0 @@
-- Hacer que double tap pueda abrir una app
-- Font linda
