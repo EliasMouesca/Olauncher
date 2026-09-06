@@ -112,4 +112,6 @@
     <string name="unable_to_open_shortcut">לא ניתן לפתוח את קיצור הדרך</string>
     <string name="change_wallpaper">שינוי טפט</string>
     <string name="wallpaper_picker_unavailable">בורר הטפטים אינו זמין</string>
+    <string name="bold_font">גופן מודגש</string>
+    <string name="unable_to_open_app_info">לא ניתן לפתוח את פרטי האפליקציה</string>
 </resources>

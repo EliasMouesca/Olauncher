@@ -114,4 +114,6 @@
     <string name="unable_to_open_shortcut">Kısayol açılamıyor</string>
     <string name="change_wallpaper">Duvar kağıdını değiştir</string>
     <string name="wallpaper_picker_unavailable">Duvar kağıdı seçici kullanılamıyor</string>
+    <string name="bold_font">Kalın yazı tipi</string>
+    <string name="unable_to_open_app_info">Uygulama bilgileri açılamıyor</string>
 </resources><!-- Turkish -->

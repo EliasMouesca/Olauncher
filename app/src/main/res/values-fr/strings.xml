@@ -115,4 +115,6 @@
     <string name="unable_to_open_shortcut">Impossible d\'ouvrir le raccourci</string>
     <string name="change_wallpaper">Changer le fond d’écran</string>
     <string name="wallpaper_picker_unavailable">Sélecteur de fond d’écran indisponible</string>
+    <string name="bold_font">Police grasse</string>
+    <string name="unable_to_open_app_info">Impossible d’ouvrir les informations de l’application</string>
 </resources><!-- French -->

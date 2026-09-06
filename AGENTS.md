@@ -26,7 +26,7 @@ Use the Gradle wrapper from the repository root:
 - `./gradlew connectedAndroidTest` runs instrumented tests on a connected Android device or emulator.
 - `./gradlew lint` runs Android lint checks.
 
-Use Java 17, matching the module’s compatibility. Do not commit generated `build/` or IDE files.
+Use Java 17, matching the module’s compatibility. The current Gradle/AGP combination cannot run its test tasks under Java 24; set `JAVA_HOME` to a Java 17 installation before running Gradle. Do not commit generated `build/` or IDE files.
 
 ## Coding Style & Naming Conventions
 

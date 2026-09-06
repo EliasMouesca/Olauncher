@@ -113,4 +113,6 @@
     <string name="unable_to_open_shortcut">Não é possível abrir o atalho</string>
     <string name="change_wallpaper">Alterar papel de parede</string>
     <string name="wallpaper_picker_unavailable">Seletor de papel de parede indisponível</string>
+    <string name="bold_font">Fonte em negrito</string>
+    <string name="unable_to_open_app_info">Não foi possível abrir as informações do app</string>
 </resources><!-- Portuguese -->

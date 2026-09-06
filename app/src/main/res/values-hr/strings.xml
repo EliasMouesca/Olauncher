@@ -114,4 +114,6 @@
     <string name="unable_to_open_shortcut">Prečac nije moguće otvoriti</string>
     <string name="change_wallpaper">Promijeni pozadinu</string>
     <string name="wallpaper_picker_unavailable">Birač pozadine nije dostupan</string>
+    <string name="bold_font">Podebljani font</string>
+    <string name="unable_to_open_app_info">Nije moguće otvoriti informacije o aplikaciji</string>
 </resources><!-- Croatian -->

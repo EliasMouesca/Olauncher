@@ -114,4 +114,6 @@
     <string name="unable_to_open_shortcut">Verknüpfung kann nicht geöffnet werden</string>
     <string name="change_wallpaper">Hintergrund ändern</string>
     <string name="wallpaper_picker_unavailable">Hintergrundauswahl nicht verfügbar</string>
+    <string name="bold_font">Fettschrift</string>
+    <string name="unable_to_open_app_info">App-Informationen können nicht geöffnet werden</string>
 </resources>

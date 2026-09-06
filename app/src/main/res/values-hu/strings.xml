@@ -113,4 +113,6 @@
     <string name="unable_to_open_shortcut">Nem lehet megnyitni a parancsikont</string>
     <string name="change_wallpaper">Háttérkép módosítása</string>
     <string name="wallpaper_picker_unavailable">A háttérképválasztó nem érhető el</string>
+    <string name="bold_font">Félkövér betűtípus</string>
+    <string name="unable_to_open_app_info">Nem lehet megnyitni az alkalmazás adatait</string>
 </resources><!-- Hungarian -->

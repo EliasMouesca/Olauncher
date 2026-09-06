@@ -113,4 +113,6 @@
     <string name="unable_to_open_shortcut">Не вдалося відкрити ярлик</string>
     <string name="change_wallpaper">Змінити шпалери</string>
     <string name="wallpaper_picker_unavailable">Вибір шпалер недоступний</string>
+    <string name="bold_font">Жирний шрифт</string>
+    <string name="unable_to_open_app_info">Не вдалося відкрити інформацію про додаток</string>
 </resources><!-- Ukrainian -->

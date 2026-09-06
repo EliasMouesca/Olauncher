@@ -113,4 +113,6 @@
     <string name="unable_to_open_shortcut">ショートカットを開けません</string>
     <string name="change_wallpaper">壁紙を変更</string>
     <string name="wallpaper_picker_unavailable">壁紙ピッカーを利用できません</string>
+    <string name="bold_font">太字フォント</string>
+    <string name="unable_to_open_app_info">アプリ情報を開けません</string>
 </resources> <!-- Japanese -->

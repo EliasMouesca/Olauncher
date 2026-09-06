@@ -5,10 +5,12 @@ import android.app.SearchManager
 import android.app.WallpaperManager
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.LauncherApps
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.graphics.Bitmap
@@ -520,7 +522,13 @@ fun openCalendar(context: Context) {
         try {
             val intent = Intent(Intent.ACTION_MAIN)
             intent.addCategory(Intent.CATEGORY_APP_CALENDAR)
-            context.startActivity(intent)
+            val activityInfo = context.packageManager
+                .resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
+                ?.activityInfo
+            if (activityInfo != null && activityInfo.packageName != context.packageName) {
+                intent.component = ComponentName(activityInfo.packageName, activityInfo.name)
+                context.startActivity(intent)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }

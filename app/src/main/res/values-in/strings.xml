@@ -113,4 +113,6 @@
     <string name="unable_to_open_shortcut">Tidak dapat membuka pintasan</string>
     <string name="change_wallpaper">Ubah wallpaper</string>
     <string name="wallpaper_picker_unavailable">Pemilih wallpaper tidak tersedia</string>
+    <string name="bold_font">Font tebal</string>
+    <string name="unable_to_open_app_info">Tidak dapat membuka info aplikasi</string>
 </resources><!-- Indonesian -->
