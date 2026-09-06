@@ -100,10 +100,11 @@ class EditableAppWidgetHostView(context: Context) : AppWidgetHostView(context) {
     }
 }
 
-class LauncherAppWidgetHost(context: Context, hostId: Int) : AppWidgetHost(context, hostId) {
+class LauncherAppWidgetHost(context: Context, hostId: Int) :
+    AppWidgetHost(context.applicationContext, hostId) {
     override fun onCreateView(
         context: Context,
         appWidgetId: Int,
         appWidget: AppWidgetProviderInfo,
-    ): AppWidgetHostView = EditableAppWidgetHostView(context)
+    ): AppWidgetHostView = EditableAppWidgetHostView(context.applicationContext)
 }

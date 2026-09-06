@@ -91,7 +91,10 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
         deviceManager = context?.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
         appWidgetManager = requireContext().getSystemService(AppWidgetManager::class.java)
-        appWidgetHost = LauncherAppWidgetHost(requireContext(), Constants.APP_WIDGET_HOST_ID)
+        appWidgetHost = LauncherAppWidgetHost(
+            requireContext().applicationContext,
+            Constants.APP_WIDGET_HOST_ID,
+        )
         binding.widgetCanvas.setWidgetLongClickListener(::showWidgetOptions)
         binding.widgetCanvas.setPlacementChangedListener { placement ->
             prefs.upsertWidgetPlacement(placement)
@@ -433,7 +436,11 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             }
 
             val hostView = runCatching {
-                appWidgetHost.createView(requireContext(), placement.appWidgetId, providerInfo)
+                appWidgetHost.createView(
+                    requireContext().applicationContext,
+                    placement.appWidgetId,
+                    providerInfo,
+                )
             }.getOrNull()
             if (hostView != null) {
                 binding.widgetCanvas.addWidgetView(placement, hostView)
