@@ -211,12 +211,6 @@ class AppDrawerFragment : BaseFragment() {
                 prefs.hiddenApps = newSet
                 if (newSet.isEmpty())
                     findNavController().popBackStack()
-                if (prefs.firstHide) {
-                    binding.search.hideKeyboard()
-                    prefs.firstHide = false
-                    viewModel.showDialog.postValue(Constants.Dialog.HIDDEN)
-                    findNavController().navigate(R.id.action_appListFragment_to_settingsFragment2)
-                }
                 viewModel.getAppList()
                 viewModel.getHiddenApps()
             },
@@ -247,7 +241,7 @@ class AppDrawerFragment : BaseFragment() {
                 val scrollRange = super.scrollVerticallyBy(dx, recycler, state)
                 val overScroll = dx - scrollRange
                 if (overScroll < -10 && binding.recyclerView.scrollState == RecyclerView.SCROLL_STATE_DRAGGING)
-                    checkMessageAndExit()
+                    exitOnTopOverscroll()
                 return scrollRange
             }
         }
@@ -264,8 +258,6 @@ class AppDrawerFragment : BaseFragment() {
     }
 
     private fun initObservers() {
-        viewModel.firstOpen.observe(viewLifecycleOwner) {
-        }
         if (flag == Constants.FLAG_HIDDEN_APPS) {
             viewModel.hiddenApps.observe(viewLifecycleOwner) {
                 it?.let {
@@ -359,10 +351,8 @@ class AppDrawerFragment : BaseFragment() {
         }
     }
 
-    private fun checkMessageAndExit() {
+    private fun exitOnTopOverscroll() {
         findNavController().popBackStack()
-        if (flag == Constants.FLAG_LAUNCH_APP)
-            viewModel.checkForMessages.call()
     }
 
     override fun onStart() {

@@ -48,7 +48,6 @@ class WidgetCanvasView @JvmOverloads constructor(
     private val placementViews = linkedMapOf<Int, View>()
     private var onWidgetLongClick: ((WidgetPlacement) -> Unit)? = null
     private var onPlacementChanged: ((WidgetPlacement) -> Unit)? = null
-    private var onInteractionStateChanged: ((InteractionMode?) -> Unit)? = null
     private var interactionMode: InteractionMode? = null
     private var interactionWidgetId: Int? = null
     private var interactionDownX = 0f
@@ -72,10 +71,6 @@ class WidgetCanvasView @JvmOverloads constructor(
 
     fun setPlacementChangedListener(listener: (WidgetPlacement) -> Unit) {
         onPlacementChanged = listener
-    }
-
-    fun setInteractionStateListener(listener: (InteractionMode?) -> Unit) {
-        onInteractionStateChanged = listener
     }
 
     fun setPlacements(value: List<WidgetPlacement>) {
@@ -144,17 +139,14 @@ class WidgetCanvasView @JvmOverloads constructor(
         interactionStartSpanX = placement.spanX
         interactionStartSpanY = placement.spanY
         placementViews[appWidgetId]?.alpha = 0.82f
-        onInteractionStateChanged?.invoke(mode)
         invalidate()
     }
 
     fun cancelInteraction() {
-        val wasInteracting = interactionMode != null
         interactionWidgetId?.let { placementViews[it]?.alpha = 1f }
         interactionWidgetId = null
         interactionMode = null
         requestDisallowInterceptTouchEvent(false)
-        if (wasInteracting) onInteractionStateChanged?.invoke(null)
         invalidate()
     }
 

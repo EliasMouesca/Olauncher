@@ -31,15 +31,6 @@
         android:name="com.elicapo.launcher.ui.AppDrawerFragment"
         android:label="app_list_fragment"
         tools:layout="@layout/fragment_app_drawer">
-        <action
-            android:id="@+id/action_appListFragment_to_settingsFragment2"
-            app:destination="@id/settingsFragment"
-            app:enterAnim="@anim/fade_enter"
-            app:exitAnim="@anim/fade_exit"
-            app:popEnterAnim="@anim/fade_enter"
-            app:popExitAnim="@anim/fade_exit"
-            app:popUpTo="@+id/appListFragment"
-            app:popUpToInclusive="true" />
     </fragment>
     <fragment
         android:id="@+id/settingsFragment"

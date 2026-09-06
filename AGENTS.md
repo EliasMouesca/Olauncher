@@ -13,6 +13,7 @@ This repository contains one Android application module, `app/`. Kotlin producti
 Widgets are hosted by `HomeFragment` through `LauncherAppWidgetHost` using the stable host ID in `Constants`. Widget instances are persisted as version-tolerant JSON in `Prefs`; `WidgetCanvasView` owns the invisible four-column placement grid, while `EditableAppWidgetHostView` detects long-press editing at the host parent and forwards only active move/resize gestures to the canvas, leaving normal provider touch handling intact. Keep the external `PinItemActivity` flow and the home-host flow in sync when changing widget persistence or placement behavior.
 
 Double-tap app actions follow the swipe-app persistence pattern in `Prefs`, including activity, user profile, and pinned-shortcut data. Selecting an app enables it and disables double-tap locking; long-pressing the configured app toggles it off so the existing lock action can be enabled again. Keep this mode precedence synchronized between `SettingsFragment` and `HomeFragment`.
+This fork does not surface self-promotional content in the app. Do not add review/share requests, external-app recommendations, donation or affiliate prompts, social-follow links, scheduled announcements, or optional onboarding tips. Keep functional settings, permission explanations, and error feedback; update both orientation layouts and every localized `strings.xml` when user-visible content changes.
 
 ## Build, Test, and Development Commands
 

@@ -41,7 +41,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val appContext by lazy { application.applicationContext }
     private val prefs = Prefs(appContext)
 
-    val firstOpen = MutableLiveData<Boolean>()
     val refreshHome = MutableLiveData<Boolean>()
     val toggleDateTime = MutableLiveData<Unit>()
     val updateSwipeApps = MutableLiveData<Any>()
@@ -60,8 +59,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // Suppress backToHomeScreen during Private Space lock/unlock auth
     var isPrivateSpaceToggling = false
 
-    val showDialog = SingleLiveEvent<String>()
-    val checkForMessages = SingleLiveEvent<Unit?>()
     val resetLauncherLiveData = SingleLiveEvent<Unit?>()
     // Home button for recents feature disabled
     // val showRecentApps = SingleLiveEvent<Unit?>()
@@ -370,10 +367,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             prefs.screenTimeAppUser = appModel.user.toString()
             prefs.screenTimeAppClassName = appModel.activityClassName
         }
-    }
-
-    fun firstOpen(value: Boolean) {
-        firstOpen.postValue(value)
     }
 
     fun refreshHome(appCountUpdated: Boolean) {

@@ -96,16 +96,6 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         binding.widgetCanvas.setPlacementChangedListener { placement ->
             prefs.upsertWidgetPlacement(placement)
         }
-        binding.widgetCanvas.setInteractionStateListener { mode ->
-            binding.widgetEditHint.apply {
-                text = when (mode) {
-                    WidgetCanvasView.InteractionMode.MOVE -> getString(R.string.widget_editing_move)
-                    WidgetCanvasView.InteractionMode.RESIZE -> getString(R.string.widget_editing_resize)
-                    null -> ""
-                }
-                isVisible = mode != null
-            }
-        }
         binding.widgetScrollView.setOnLongClickListener {
             showHomeLongPressMenu()
             true
@@ -226,11 +216,6 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     }
 
     private fun initObservers() {
-        if (prefs.firstSettingsOpen) {
-            binding.firstRunTips.visibility = View.VISIBLE
-            binding.setDefaultLauncher.visibility = View.GONE
-        } else binding.firstRunTips.visibility = View.GONE
-
         viewModel.refreshHome.observe(viewLifecycleOwner) {
             populateHomeScreen(it)
         }
@@ -243,7 +228,6 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
                 prefs.homeBottomAlignment = false
                 setHomeAlignment()
             }
-            if (binding.firstRunTips.isVisible) return@Observer
             binding.setDefaultLauncher.isVisible = it.not() && prefs.hideSetDefaultLauncher.not()
         })
         viewModel.homeAppAlignment.observe(viewLifecycleOwner) {
@@ -490,7 +474,6 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     private fun openHomeSettings() {
         try {
             findNavController().navigate(R.id.action_mainFragment_to_settingsFragment)
-            viewModel.firstOpen(false)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -635,7 +618,6 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
                     placement.appWidgetId,
                     WidgetCanvasView.InteractionMode.MOVE,
                 )
-                requireContext().showToast(R.string.widget_drag_to_move)
             }
             if (providerInfo.resizeMode != AppWidgetProviderInfo.RESIZE_NONE) {
                 actions += getString(R.string.widget_resize) to {
@@ -643,7 +625,6 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
                         placement.appWidgetId,
                         WidgetCanvasView.InteractionMode.RESIZE,
                     )
-                    requireContext().showToast(R.string.widget_drag_to_resize)
                 }
             }
             if (providerInfo.configure != null) {
@@ -787,7 +768,6 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         fallback: (() -> Unit)? = null,
     ) {
         if (appName.isEmpty()) {
-            showLongPressToast()
             return
         }
         if (isShortcut && !shortcutId.isNullOrEmpty()) {
@@ -1004,8 +984,6 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         }
     }
 
-    private fun showLongPressToast() = requireContext().showToast(getString(R.string.long_press_to_select_app))
-
     private fun textOnClick(view: View) = onClick(view)
 
     private fun textOnLongClick(view: View) = onLongClick(view)
@@ -1044,7 +1022,6 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
             override fun onClick() {
                 super.onClick()
-                viewModel.checkForMessages.call()
             }
         }
     }
