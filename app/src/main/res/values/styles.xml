@@ -43,13 +43,14 @@
         <item name="primaryShadeDarkColor">@color/blackInverseTrans25</item>
         <item name="dialogShadeColor">@color/blackInverseTrans50</item>
 
-        <item name="mainFontFamily">sans-serif-light</item>
+        <item name="mainFontFamily">@font/patrick_hand_regular</item>
+        <item name="mainFontStyle">normal</item>
 
     </style>
 
     <!-- Applied over AppTheme when bold font is enabled -->
     <style name="BoldFontOverlay">
-        <item name="mainFontFamily">sans-serif</item>
+        <item name="mainFontStyle">bold</item>
     </style>
 
     <style name="WindowAnimationTransition">
@@ -69,6 +70,8 @@
     </style>
 
     <style name="TextDefault" parent="@android:style/TextAppearance.Large">
+        <item name="android:fontFamily">?attr/mainFontFamily</item>
+        <item name="android:textStyle">?attr/mainFontStyle</item>
         <item name="android:textColor">@drawable/text_colors_default</item>
         <item name="android:textColorHint">?attr/primaryColorTrans80</item>
         <item name="android:shadowColor">?attr/primaryTextShadowColor</item>
