@@ -113,4 +113,6 @@
     <string name="invalid_shortcut">Raccourci non valide</string>
     <string name="shortcut_not_found">Raccourci introuvable</string>
     <string name="unable_to_open_shortcut">Impossible d\'ouvrir le raccourci</string>
+    <string name="change_wallpaper">Changer le fond d’écran</string>
+    <string name="wallpaper_picker_unavailable">Sélecteur de fond d’écran indisponible</string>
 </resources><!-- French -->

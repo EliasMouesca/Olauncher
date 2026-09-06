@@ -137,4 +137,6 @@
     <string name="invalid_shortcut">Invalid shortcut</string>
     <string name="shortcut_not_found">Shortcut not found</string>
     <string name="unable_to_open_shortcut">Unable to open shortcut</string>
+    <string name="change_wallpaper">Change wallpaper</string>
+    <string name="wallpaper_picker_unavailable">Wallpaper picker unavailable</string>
 </resources>
