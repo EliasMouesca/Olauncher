@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="512"
+   height="512"
+   viewBox="0 0 135.46666 135.46667"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.4 (dcaf3e7d9e, 2026-05-05)"
+   sodipodi:docname="drawing.svg"
+   inkscape:export-filename="icon_dark.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="true"
+     inkscape:zoom="1.1273422"
+     inkscape:cx="221.76052"
+     inkscape:cy="266.55615"
+     inkscape:window-width="1920"
+     inkscape:window-height="1128"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1">
+    <inkscape:grid
+       id="grid1"
+       units="mm"
+       originx="0"
+       originy="0"
+       spacingx="0.99999998"
+       spacingy="1"
+       empcolor="#0099e5"
+       empopacity="0.30196078"
+       color="#0099e5"
+       opacity="0.14901961"
+       empspacing="5"
+       enabled="true"
+       visible="true" />
+  </sodipodi:namedview>
+  <defs
+     id="defs1">
+    <inkscape:path-effect
+       effect="fillet_chamfer"
+       id="path-effect2"
+       is_visible="true"
+       lpeversion="1"
+       nodesatellites_param="F,0,0,1,0,0,0,1 @ F,0,0,1,0,4.8889671,0,1 @ F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1 @ F,0,0,1,0,5.0549056,0,1 @ F,0,0,1,0,0,0,1"
+       radius="0"
+       unit="px"
+       method="auto"
+       mode="F"
+       chamfer_steps="1"
+       flexible="false"
+       use_knot_distance="true"
+       apply_no_radius="true"
+       apply_with_radius="true"
+       only_selected="false"
+       hide_knots="false" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="g5"
+       transform="matrix(1.9531795,0,0,1.9531795,-103.31402,-186.11758)">
+      <path
+         style="fill:none;stroke:#ffffff;stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
+         d="M 65.127845,144.87291 V 124.8027 a 4.8889671,4.8889671 135 0 1 4.888967,-4.88897 h 14.925489 c 0,0 6.882643,-5.15684 2.564347,-5.15684 -4.318299,0 2.444318,5.05159 2.444318,5.05159 l 14.988514,0 a 5.0549056,5.0549056 45 0 1 5.05491,5.05491 v 20.16625"
+         id="path1"
+         inkscape:label="Caja de cristal"
+         inkscape:original-d="m 65.127845,144.87291 v -24.95918 h 19.814456 c 0,0 6.882643,-5.15684 2.564347,-5.15684 -4.318299,0 2.444318,5.05159 2.444318,5.05159 h 20.043424 v 25.22116"
+         inkscape:path-effect="#path-effect2"
+         sodipodi:nodetypes="cccsccc" />
+      <path
+         style="fill:none;stroke:#ffffff;stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
+         d="m 60.479778,145.17919 53.854102,0"
+         id="path2"
+         inkscape:label="Piso"
+         sodipodi:nodetypes="cc" />
+      <path
+         style="fill:#008000;stroke:#008000;stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:0"
+         d="m 72.291619,144.64323 c 0,0 -1.981897,0.40729 -2.072129,-1.81445 -0.112127,-2.76084 3.332945,-2.01112 3.332945,-2.01112 l 30.393365,0.32756 c 0,0 1.3421,0.60306 1.22761,1.57473 -0.28114,2.38622 -2.63734,1.95326 -2.63734,1.95326"
+         id="path3"
+         inkscape:label="Cuerpo"
+         sodipodi:nodetypes="csccsc" />
+      <path
+         style="fill:#008000;fill-opacity:0;stroke:#008000;stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
+         d="m 73.524988,141.8328 c 0,0 -1.2769,-5.48594 -3.641529,-3.7834"
+         id="path4" />
+      <path
+         style="fill:#008000;fill-opacity:0;stroke:#008000;stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
+         d="m 74.443445,141.80541 c 0,0 -1.84441,-5.86429 1.797119,-3.878"
+         id="path5" />
+    </g>
+  </g>
+</svg>
