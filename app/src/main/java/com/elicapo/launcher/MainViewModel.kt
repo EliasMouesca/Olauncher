@@ -26,13 +26,18 @@ import com.elicapo.launcher.helper.formattedTimeSpent
 import com.elicapo.launcher.helper.getAppsList
 import com.elicapo.launcher.helper.getPrivateSpaceApps
 import com.elicapo.launcher.helper.getPrivateSpaceUserHandle
+import com.elicapo.launcher.helper.getUserHandleFromString
 import com.elicapo.launcher.helper.hasBeenMinutes
 import com.elicapo.launcher.helper.isOlauncherDefault
 import com.elicapo.launcher.helper.isPackageInstalled
 import com.elicapo.launcher.helper.isPrivateSpaceLocked
 import com.elicapo.launcher.helper.showToast
 import com.elicapo.launcher.helper.usageStats.EventLogWrapper
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONObject
+import java.text.Collator
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
@@ -40,12 +45,20 @@ import java.util.concurrent.TimeUnit
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val appContext by lazy { application.applicationContext }
     private val prefs = Prefs(appContext)
+    private var appListLoadJob: Job? = null
+    private var appListLoadIncludesHiddenApps: Boolean? = null
+    private var appListRequestId = 0L
+    private var appListIncludesHiddenApps = false
+    private var appListLoadedFromDisk = false
+    private val cachedAppList = loadCachedAppList().also {
+        appListLoadedFromDisk = it != null
+    }
 
     val refreshHome = MutableLiveData<Boolean>()
     val toggleDateTime = MutableLiveData<Unit>()
     val updateSwipeApps = MutableLiveData<Any>()
     val updateDoubleTapApp = MutableLiveData<Any>()
-    val appList = MutableLiveData<List<AppModel>?>()
+    val appList = MutableLiveData<List<AppModel>?>(cachedAppList)
     val hiddenApps = MutableLiveData<List<AppModel>?>()
     val isOlauncherDefault = MutableLiveData<Boolean>()
     val launcherResetFailed = MutableLiveData<Boolean>()
@@ -419,12 +432,102 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun getAppList(includeHiddenApps: Boolean = false) {
-        viewModelScope.launch {
+    fun getAppList(includeHiddenApps: Boolean = false, forceRefresh: Boolean = false) {
+        val hasMatchingCache = appList.value != null && appListIncludesHiddenApps == includeHiddenApps
+        val hasMatchingLoad = appListLoadJob?.isActive == true
+                && appListLoadIncludesHiddenApps == includeHiddenApps
+        if (!forceRefresh && (hasMatchingLoad || (hasMatchingCache && !appListLoadedFromDisk))) return
+
+        appListRequestId++
+        val requestId = appListRequestId
+        appListLoadJob?.cancel()
+        appListLoadIncludesHiddenApps = includeHiddenApps
+        appListLoadJob = viewModelScope.launch {
             val apps = getAppsList(appContext, prefs, includeRegularApps = true, includeHiddenApps)
+            if (requestId != appListRequestId) return@launch
+            appListIncludesHiddenApps = includeHiddenApps
             appList.value = apps
+            appListLoadedFromDisk = false
+            appListLoadJob = null
+            appListLoadIncludesHiddenApps = null
+            if (!includeHiddenApps && apps.isNotEmpty()) saveAppListCache(apps)
         }
         getPrivateSpaceAppList()
+    }
+
+    private fun loadCachedAppList(): List<AppModel>? {
+        val serialized = prefs.appListCache
+        if (serialized.isBlank()) return null
+
+        return runCatching {
+            val collator = Collator.getInstance()
+            val cachedApps = mutableListOf<AppModel>()
+            val cachedItems = JSONArray(serialized)
+            for (index in 0 until cachedItems.length()) {
+                val item = cachedItems.optJSONObject(index) ?: continue
+                val appLabel = item.optString("label")
+                val appPackage = item.optString("package")
+                val user = getUserHandleFromString(appContext, item.optString("user"))
+                if (appLabel.isBlank() || appPackage.isBlank()) continue
+
+                when (item.optString("type")) {
+                    "app" -> cachedApps.add(
+                        AppModel.App(
+                            appLabel = appLabel,
+                            key = collator.getCollationKey(appLabel),
+                            appPackage = appPackage,
+                            activityClassName = item.optString("activity").ifBlank { null },
+                            user = user,
+                        )
+                    )
+
+                    "shortcut" -> item.optString("shortcut").takeIf { it.isNotBlank() }?.let {
+                        cachedApps.add(
+                            AppModel.PinnedShortcut(
+                                appLabel = appLabel,
+                                key = collator.getCollationKey(appLabel),
+                                appPackage = appPackage,
+                                shortcutId = it,
+                                user = user,
+                            )
+                        )
+                    }
+                }
+            }
+            cachedApps.takeIf { it.isNotEmpty() }
+        }.getOrNull()
+    }
+
+    private fun saveAppListCache(apps: List<AppModel>) {
+        val cachedItems = JSONArray()
+        apps.forEach { app ->
+            when (app) {
+                is AppModel.App -> if (app.appPackage.isNotBlank()) {
+                    cachedItems.put(
+                        JSONObject().apply {
+                            put("type", "app")
+                            put("label", app.appLabel)
+                            put("package", app.appPackage)
+                            put("activity", app.activityClassName ?: "")
+                            put("user", app.user.toString())
+                        }
+                    )
+                }
+
+                is AppModel.PinnedShortcut -> cachedItems.put(
+                    JSONObject().apply {
+                        put("type", "shortcut")
+                        put("label", app.appLabel)
+                        put("package", app.appPackage)
+                        put("shortcut", app.shortcutId)
+                        put("user", app.user.toString())
+                    }
+                )
+
+                is AppModel.PrivateSpaceHeader -> Unit
+            }
+        }
+        prefs.appListCache = cachedItems.toString()
     }
 
     fun getHiddenApps() {

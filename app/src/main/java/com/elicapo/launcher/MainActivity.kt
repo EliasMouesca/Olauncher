@@ -96,7 +96,6 @@ class MainActivity : AppCompatActivity() {
             prefs.firstOpenTime = System.currentTimeMillis()
 
         initObservers(viewModel)
-        viewModel.getAppList()
         registerShortcutCallback()
         setupOrientation()
 
@@ -125,33 +124,48 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         viewModel.isPrivateSpaceToggling = false
-        viewModel.getAppList()
+        // Start refreshing before the user can open the drawer. The previous list remains
+        // available through the ViewModel while this asynchronous refresh is in progress.
+        viewModel.getAppList(forceRefresh = true)
     }
 
     private fun registerShortcutCallback() {
         val launcherApps = getSystemService(LauncherApps::class.java)
         launcherAppsCallback = object : LauncherApps.Callback() {
-            override fun onPackageRemoved(packageName: String, user: android.os.UserHandle) = Unit
-            override fun onPackageAdded(packageName: String, user: android.os.UserHandle) = Unit
-            override fun onPackageChanged(packageName: String, user: android.os.UserHandle) = Unit
+            override fun onPackageRemoved(packageName: String, user: android.os.UserHandle) {
+                viewModel.getAppList(forceRefresh = true)
+            }
+
+            override fun onPackageAdded(packageName: String, user: android.os.UserHandle) {
+                viewModel.getAppList(forceRefresh = true)
+            }
+
+            override fun onPackageChanged(packageName: String, user: android.os.UserHandle) {
+                viewModel.getAppList(forceRefresh = true)
+            }
+
             override fun onPackagesAvailable(
                 packageNames: Array<out String>,
                 user: android.os.UserHandle,
                 replacing: Boolean,
-            ) = Unit
+            ) {
+                viewModel.getAppList(forceRefresh = true)
+            }
 
             override fun onPackagesUnavailable(
                 packageNames: Array<out String>,
                 user: android.os.UserHandle,
                 replacing: Boolean,
-            ) = Unit
+            ) {
+                viewModel.getAppList(forceRefresh = true)
+            }
 
             override fun onShortcutsChanged(
                 packageName: String,
                 shortcuts: MutableList<ShortcutInfo>,
                 user: android.os.UserHandle,
             ) {
-                viewModel.getAppList()
+                viewModel.getAppList(forceRefresh = true)
             }
         }
         launcherApps.registerCallback(launcherAppsCallback!!)

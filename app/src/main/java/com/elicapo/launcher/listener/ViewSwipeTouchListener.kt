@@ -10,13 +10,41 @@ import kotlin.math.abs
 
 internal open class ViewSwipeTouchListener(c: Context?, v: View) : OnTouchListener {
     private val gestureDetector: GestureDetector
+    private val earlySwipeThreshold = 100f
+    private var swipeUpTriggered = false
+    private var gestureStartX = 0f
+    private var gestureStartY = 0f
 
     override fun onTouch(view: View, motionEvent: MotionEvent): Boolean {
         when (motionEvent.action) {
-            MotionEvent.ACTION_DOWN -> view.isPressed = true
-            MotionEvent.ACTION_UP -> view.isPressed = false
+            MotionEvent.ACTION_DOWN -> {
+                view.isPressed = true
+                swipeUpTriggered = false
+                gestureStartX = motionEvent.x
+                gestureStartY = motionEvent.y
+            }
+
+            MotionEvent.ACTION_MOVE -> triggerEarlySwipeUp(motionEvent)
+
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                view.isPressed = false
+                val handled = gestureDetector.onTouchEvent(motionEvent)
+                swipeUpTriggered = false
+                return handled
+            }
         }
         return gestureDetector.onTouchEvent(motionEvent)
+    }
+
+    private fun triggerEarlySwipeUp(event: MotionEvent) {
+        if (swipeUpTriggered) return
+
+        val diffX = event.x - gestureStartX
+        val diffY = event.y - gestureStartY
+        if (diffY < -earlySwipeThreshold && abs(diffY) > abs(diffX)) {
+            swipeUpTriggered = true
+            onSwipeUp()
+        }
     }
 
     private inner class GestureListener(private val view: View) : SimpleOnGestureListener() {
@@ -28,6 +56,7 @@ internal open class ViewSwipeTouchListener(c: Context?, v: View) : OnTouchListen
         }
 
         override fun onSingleTapUp(e: MotionEvent): Boolean {
+            if (swipeUpTriggered) return false
             onClick(view)
             return super.onSingleTapUp(e)
         }
@@ -49,6 +78,7 @@ internal open class ViewSwipeTouchListener(c: Context?, v: View) : OnTouchListen
             velocityY: Float,
         ): Boolean {
             try {
+                if (swipeUpTriggered) return false
                 val diffY = event2.y - (event1?.y ?: 0F)
                 val diffX = event2.x - (event1?.x ?: 0F)
                 if (abs(diffX) > abs(diffY)) {

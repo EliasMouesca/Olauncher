@@ -88,12 +88,14 @@ suspend fun getAppsList(
 
             for (profile in userManager.userProfiles) {
                 if (isPrivateSpaceProfile(context, profile)) continue
-                for (app in launcherApps.getActivityList(null, profile)) {
+                val activities = launcherApps.getActivityList(null, profile)
+                for (app in activities) {
+                    val appLabel = app.label.toString()
                     val appLabelShown = prefs.getAppRenameLabel(app.applicationInfo.packageName)
-                        .ifBlank { app.label.toString() }
+                        .ifBlank { appLabel }
                     val appModel = AppModel.App(
                         appLabel = appLabelShown,
-                        key = collator.getCollationKey(app.label.toString()),
+                        key = collator.getCollationKey(appLabel),
                         appPackage = app.applicationInfo.packageName,
                         activityClassName = app.componentName.className,
                         isNew = (System.currentTimeMillis() - app.firstInstallTime) < Constants.ONE_HOUR_IN_MILLIS,
