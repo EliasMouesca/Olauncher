@@ -96,7 +96,6 @@ class MainActivity : AppCompatActivity() {
             prefs.firstOpenTime = System.currentTimeMillis()
 
         initObservers(viewModel)
-        viewModel.getAppList()
         registerShortcutCallback()
         setupOrientation()
 
@@ -125,8 +124,9 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         viewModel.isPrivateSpaceToggling = false
-        viewModel.getAppList()
-        viewModel.getPrivateSpaceAppList()
+        // Start refreshing before the user can open the drawer. The previous list remains
+        // available through the ViewModel while this asynchronous refresh is in progress.
+        viewModel.getAppList(forceRefresh = true)
     }
 
     private fun registerShortcutCallback() {
