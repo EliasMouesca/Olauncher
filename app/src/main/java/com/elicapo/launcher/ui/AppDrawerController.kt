@@ -75,11 +75,23 @@ class AppDrawerController(
         }
     }
 
+    /**
+     * The drawer view is persistent, so a previous list fling must not survive into a new opening
+     * gesture. Resetting before the host makes the drawer visible also prevents that gesture's
+     * velocity from becoming the list's initial scroll state.
+     */
+    fun prepareForOpening() {
+        binding.recyclerView.stopScroll()
+        if (adapter.itemCount > 0)
+            linearLayoutManager.scrollToPositionWithOffset(0, 0)
+    }
+
     fun onDrawerOpened() {
         binding.search.showKeyboard(prefs.autoShowKeyboard)
     }
 
     fun onDrawerClosed() {
+        binding.recyclerView.stopScroll()
         binding.search.hideKeyboard()
     }
 

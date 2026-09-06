@@ -88,9 +88,7 @@ class MainActivity : AppCompatActivity(), AppDrawerHost {
             if (navController.currentDestination?.id != R.id.mainFragment) {
                 false
             } else {
-                val controller = ensureAppDrawer()
-                viewModel.getAppList()
-                controller.configure(AppDrawerRequest(Constants.FLAG_LAUNCH_APP))
+                prepareAppDrawer(AppDrawerRequest(Constants.FLAG_LAUNCH_APP))
                 true
             }
         }
@@ -230,13 +228,18 @@ class MainActivity : AppCompatActivity(), AppDrawerHost {
     }
 
     override fun showAppDrawer(request: AppDrawerRequest) {
+        prepareAppDrawer(request)
+        drawerHost.showDrawer()
+    }
+
+    private fun prepareAppDrawer(request: AppDrawerRequest) {
         val controller = ensureAppDrawer()
         if (request.flag == Constants.FLAG_HIDDEN_APPS)
             viewModel.getHiddenApps()
         else
             viewModel.getAppList(request.includeHiddenApps)
         controller.configure(request)
-        drawerHost.showDrawer()
+        controller.prepareForOpening()
     }
 
     override fun closeAppDrawer(target: DrawerReturnTarget, animated: Boolean) {
