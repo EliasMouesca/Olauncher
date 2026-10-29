@@ -19,11 +19,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
+import android.widget.AbsListView
+import android.widget.ArrayAdapter
 import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.appcompat.widget.SearchView
 import androidx.core.view.isVisible
 import androidx.core.view.setPadding
 import androidx.lifecycle.Observer
@@ -63,6 +69,18 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         val info: AppWidgetProviderInfo,
         val user: UserHandle,
     )
+
+    private sealed class WidgetPickerRow {
+        data class ProviderHeader(
+            val packageName: String,
+            val label: String,
+        ) : WidgetPickerRow()
+
+        data class Widget(
+            val choice: WidgetProviderChoice,
+            val label: String,
+        ) : WidgetPickerRow()
+    }
 
     private lateinit var prefs: Prefs
     private lateinit var viewModel: MainViewModel
@@ -127,6 +145,14 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     override fun onStop() {
         runCatching { appWidgetHost.stopListening() }
         super.onStop()
+    }
+
+    /**
+     * Some widget providers render outside their parent alpha layer. Hide their host explicitly
+     * while the activity-level app drawer covers Home so they cannot appear above the drawer.
+     */
+    fun setWidgetsVisible(visible: Boolean) {
+        _binding?.widgetScrollView?.visibility = if (visible) View.VISIBLE else View.INVISIBLE
     }
 
     override fun onClick(view: View) {
@@ -227,7 +253,6 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
                     prefs.dailyWallpaper = false
                     viewModel.cancelWallpaperWorker()
                 }
-                prefs.homeBottomAlignment = false
                 setHomeAlignment()
             }
             binding.setDefaultLauncher.isVisible = it.not() && prefs.hideSetDefaultLauncher.not()
@@ -502,17 +527,142 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             return
         }
 
-        val labels = choices.map { choice ->
+        val packageManager = requireContext().packageManager
+        val widgetLabels = choices.associateWith { choice ->
             val widgetLabel = choice.info.loadLabel(requireContext().packageManager).toString()
-            val providerLabel = choice.info.provider.packageName
+            val providerLabel = runCatching {
+                packageManager.getApplicationLabel(
+                    packageManager.getApplicationInfo(choice.info.provider.packageName, 0),
+                ).toString()
+            }.getOrDefault(choice.info.provider.packageName)
             "$widgetLabel · $providerLabel"
-        }.toTypedArray()
+        }
+        val providerLabels = choices.associate { choice ->
+            choice.info.provider.packageName to widgetLabels.getValue(choice).substringAfterLast(" · ")
+        }
+        fun rowsFor(filteredChoices: List<WidgetProviderChoice>): List<WidgetPickerRow> =
+            filteredChoices
+                .groupBy { it.info.provider.packageName }
+                .toList()
+                .sortedBy { (packageName, _) -> providerLabels.getValue(packageName).lowercase(Locale.getDefault()) }
+                .flatMap { (packageName, providerChoices) ->
+                    listOf(
+                        WidgetPickerRow.ProviderHeader(
+                            packageName = packageName,
+                            label = providerLabels.getValue(packageName),
+                        ),
+                    ) + providerChoices
+                        .sortedBy { it.info.loadLabel(packageManager).toString().lowercase(Locale.getDefault()) }
+                        .map { choice ->
+                            WidgetPickerRow.Widget(
+                                choice = choice,
+                                label = choice.info.loadLabel(packageManager).toString(),
+                            )
+                        }
+                }
 
-        AlertDialog.Builder(requireContext())
+        val visibleRows = rowsFor(choices).toMutableList()
+        val pickerContent = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(8.dpToPx(), 0, 8.dpToPx(), 0)
+        }
+        val search = SearchView(requireContext()).apply {
+            queryHint = getString(R.string.widgets)
+            isIconified = false
+            clearFocus()
+        }
+        val widgetList = ListView(requireContext()).apply {
+            dividerHeight = 0
+        }
+        val adapter = object : ArrayAdapter<WidgetPickerRow>(
+            requireContext(),
+            android.R.layout.simple_list_item_1,
+            visibleRows,
+        ) {
+            override fun getViewTypeCount(): Int = 2
+
+            override fun getItemViewType(position: Int): Int = when (getItem(position)) {
+                is WidgetPickerRow.ProviderHeader -> 0
+                is WidgetPickerRow.Widget -> 1
+                null -> 1
+            }
+
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                return when (val item = getItem(position)) {
+                    is WidgetPickerRow.ProviderHeader -> {
+                        val row = (convertView as? LinearLayout) ?: LinearLayout(context).apply {
+                            gravity = Gravity.CENTER_VERTICAL
+                            orientation = LinearLayout.HORIZONTAL
+                            setPadding(12.dpToPx(), 12.dpToPx(), 12.dpToPx(), 4.dpToPx())
+                            addView(ImageView(context).apply {
+                                layoutParams = LinearLayout.LayoutParams(32.dpToPx(), 32.dpToPx())
+                            })
+                            addView(TextView(context).apply {
+                                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
+                                    marginStart = 12.dpToPx()
+                                }
+                                setTextAppearance(context, R.style.TextMedium)
+                            })
+                        }
+                        (row.getChildAt(0) as ImageView).setImageDrawable(
+                            runCatching { packageManager.getApplicationIcon(item.packageName) }
+                                .getOrElse { packageManager.getDefaultActivityIcon() },
+                        )
+                        (row.getChildAt(1) as TextView).text = item.label
+                        row
+                    }
+
+                    is WidgetPickerRow.Widget -> {
+                        val row = (convertView as? TextView) ?: TextView(context).apply {
+                            layoutParams = AbsListView.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                            )
+                            setPadding(56.dpToPx(), 8.dpToPx(), 12.dpToPx(), 8.dpToPx())
+                            setTextAppearance(context, R.style.TextSmall)
+                        }
+                        row.text = item.label
+                        row
+                    }
+
+                    null -> TextView(context)
+                }
+            }
+        }
+        widgetList.adapter = adapter
+        search.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean = false
+
+            override fun onQueryTextChange(query: String?): Boolean {
+                val searchTerm = query.orEmpty().trim()
+                val filteredChoices = if (searchTerm.isEmpty()) {
+                    choices
+                } else {
+                    choices.filter { widgetLabels.getValue(it).contains(searchTerm, ignoreCase = true) }
+                }
+                visibleRows.clear()
+                visibleRows += rowsFor(filteredChoices)
+                adapter.notifyDataSetChanged()
+                return true
+            }
+        })
+        pickerContent.addView(search)
+        pickerContent.addView(
+            widgetList,
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 360.dpToPx()),
+        )
+
+        val dialog = AlertDialog.Builder(requireContext())
             .setTitle(R.string.widgets)
-            .setItems(labels) { _, which -> startWidgetAdd(choices[which]) }
+            .setView(pickerContent)
             .setNegativeButton(R.string.not_now, null)
             .show()
+        widgetList.setOnItemClickListener { _, _, position, _ ->
+            (visibleRows[position] as? WidgetPickerRow.Widget)?.let { widget ->
+                dialog.dismiss()
+                startWidgetAdd(widget.choice)
+            }
+        }
     }
 
     private fun getWidgetProviderChoices(): List<WidgetProviderChoice> {

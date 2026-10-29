@@ -568,10 +568,6 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
     }
 
     private fun updateHomeBottomAlignment() {
-        if (viewModel.isOlauncherDefault.value != true) {
-            requireContext().showToast(getString(R.string.please_set_olauncher_as_default_first), Toast.LENGTH_LONG)
-            return
-        }
         prefs.homeBottomAlignment = !prefs.homeBottomAlignment
         populateAlignment()
         viewModel.updateHomeAlignment(prefs.homeAlignment)

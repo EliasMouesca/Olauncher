@@ -94,6 +94,7 @@ class MainActivity : AppCompatActivity(), AppDrawerHost {
         }
         drawerHost.onDrawerProgress = { progress ->
             navHostView.alpha = 1f - progress
+            currentHomeFragment()?.setWidgetsVisible(progress == 0f)
         }
         drawerHost.onDrawerOpened = {
             appDrawerController?.onDrawerOpened()
@@ -292,6 +293,11 @@ class MainActivity : AppCompatActivity(), AppDrawerHost {
             navController.popBackStack(R.id.mainFragment, false)
     }
 
+    private fun currentHomeFragment(): HomeFragment? {
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment)
+        return navHostFragment?.childFragmentManager?.primaryNavigationFragment as? HomeFragment
+    }
+
     private fun ensureAppDrawer(): AppDrawerController {
         appDrawerController?.let { return it }
 
@@ -360,9 +366,7 @@ class MainActivity : AppCompatActivity(), AppDrawerHost {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == Constants.REQUEST_CODE_WIDGET_CONFIG) {
             // AppWidgetHost starts configuration through the activity, so route its result to the home fragment.
-            val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment)
-            val homeFragment = navHostFragment?.childFragmentManager?.primaryNavigationFragment as? HomeFragment
-            homeFragment?.handleActivityResult(requestCode, resultCode, data)
+            currentHomeFragment()?.handleActivityResult(requestCode, resultCode, data)
         }
         when (requestCode) {
             Constants.REQUEST_CODE_ENABLE_ADMIN -> {

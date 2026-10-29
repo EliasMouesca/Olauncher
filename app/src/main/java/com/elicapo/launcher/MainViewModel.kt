@@ -34,6 +34,7 @@ import com.elicapo.launcher.helper.isPrivateSpaceLocked
 import com.elicapo.launcher.helper.showToast
 import com.elicapo.launcher.helper.usageStats.EventLogWrapper
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
@@ -443,7 +444,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         appListLoadJob?.cancel()
         appListLoadIncludesHiddenApps = includeHiddenApps
         appListLoadJob = viewModelScope.launch {
-            val apps = getAppsList(appContext, prefs, includeRegularApps = true, includeHiddenApps)
+            val apps = try {
+                getAppsList(appContext, prefs, includeRegularApps = true, includeHiddenApps)
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                exception.printStackTrace()
+                if (requestId == appListRequestId) {
+                    appListLoadJob = null
+                    appListLoadIncludesHiddenApps = null
+                }
+                return@launch
+            }
             if (requestId != appListRequestId) return@launch
             appListIncludesHiddenApps = includeHiddenApps
             appList.value = apps
@@ -532,8 +544,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun getHiddenApps() {
         viewModelScope.launch {
-            hiddenApps.value =
-                getAppsList(appContext, prefs, includeRegularApps = false, includeHiddenApps = true)
+            try {
+                hiddenApps.value =
+                    getAppsList(appContext, prefs, includeRegularApps = false, includeHiddenApps = true)
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                exception.printStackTrace()
+            }
         }
     }
 
