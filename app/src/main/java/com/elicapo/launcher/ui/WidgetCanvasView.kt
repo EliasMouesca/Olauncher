@@ -109,14 +109,25 @@ class WidgetCanvasView @JvmOverloads constructor(
         placementViews[placement.appWidgetId]?.let { removeView(it) }
         placementViews[placement.appWidgetId] = view
         view.tag = normalizedPlacement.appWidgetId
-        (view as? EditableAppWidgetHostView)?.setWidgetLongPressListener {
+        val onLongPress: () -> Unit = {
             onWidgetLongClick?.invoke(placements[normalizedPlacement.appWidgetId] ?: normalizedPlacement)
         }
-        (view as? EditableAppWidgetHostView)?.setInteractionTouchListener { event ->
-            if (interactionWidgetId == normalizedPlacement.appWidgetId && interactionMode != null) {
-                handleInteractionTouch(view, event)
-            } else {
-                false
+        if (view is EditableAppWidgetHostView) {
+            view.setWidgetLongPressListener(onLongPress)
+            view.setInteractionTouchListener { event ->
+                if (interactionWidgetId == normalizedPlacement.appWidgetId && interactionMode != null) {
+                    handleInteractionTouch(view, event)
+                } else {
+                    false
+                }
+            }
+        } else {
+            // A missing provider is represented by a regular view, so give it the same edit
+            // entry point as a live AppWidgetHostView. This lets users remove stale placements.
+            view.isLongClickable = true
+            view.setOnLongClickListener {
+                onLongPress()
+                true
             }
         }
         addView(view)
